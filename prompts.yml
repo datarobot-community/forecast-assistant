@@ -1,0 +1,31 @@
+project_name:
+  title: "Project Name"
+  text: |
+    Please enter a human readable name for your new project. The name must be unique across your DataRobot organization.
+    Spaces, hyphens, and underscores are allowed.
+  regex_validator: "^[\\w -]{2,}$"
+  error_message: |
+    It must contain only alphanumeric symbols, spaces, underscores and hyphens and
+    be at least 2 characters long.
+
+data_type_enum:
+  title: "Data Type"
+  text: |
+    Please choose the data type to source for this project.
+    1) AI Catalog Dataset (Use if you if you have a dataset in the AI Catalog that updates.)
+    2) Default Dataset (Use if you just want a static dataset for a demo or to play around.)
+
+    Enter the number of your choice:
+  regex_validator: "^(1|2)$"
+
+frontend_enum:
+  title: "Front End"
+  text: |
+    Please choose the front end framework for this project
+    1) React (More built out, minimal customization)
+    2) Streamlit (Less built out, easily customizable)
+
+    Enter the number of your choice:
+  regex_validator: "^(1|2)$"
+  error_message: |
+    Invalid input. Please enter the number 1 or 2 to select a frontend framework from the list.

@@ -1,0 +1,48 @@
+# This is a registry of literal parameters that can be used as node inputs and/or node outputs.
+#
+# When defining node inputs in the pipeline, you can reference keys from this yaml to indicate
+# that the pipeline should map the literal defined here to the node's input at runtime.
+#
+# Kedro precedent defines that the keys in this yaml can be referenced as below when defining
+# node inputs:
+# e.g. "params:my_key_1", "params:my_key_2.my_sub_key_2"
+
+deploy_forecast:
+  project:
+    name: ${globals:project_name} Project
+    analyze_and_model_config:
+      metric: RMSE
+      mode: quick
+      target: Sales
+      worker_count: -1
+    calendar:
+      country_code: US
+      name: ${globals:project_name} Calendar
+      start_date: "2012-01-01"
+      end_date: "2022-01-01"
+    datetime_partitioning_config:
+      datetime_partition_column: Date
+      multiseries_id_columns: [Store]
+      use_time_series: True
+      feature_derivation_window_start: -35
+      feature_derivation_window_end: 0
+      forecast_window_start: 1
+      forecast_window_end: 30
+    feature_settings_config:
+      - feature_name: "Store_Size"
+        known_in_advance: True
+      - feature_name: "Marketing"
+        known_in_advance: True
+      - feature_name: "TouristEvent"
+        known_in_advance: True
+    advanced_options_config:
+      seed: 42
+  registered_model:
+    name: ${globals:project_name}
+  deployment:
+    label: ${globals:project_name}
+    description: A fantastically generated forecast from Kedro, hurray!
+    association_id_column_name: AssociationId
+  feature_importance:
+    minimum_importance: 0.02
+    max_wait: 600

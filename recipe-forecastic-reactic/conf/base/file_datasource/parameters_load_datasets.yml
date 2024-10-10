@@ -1,0 +1,15 @@
+# This is a registry of literal parameters that can be used as node inputs and/or node outputs.
+#
+# When defining node inputs in the pipeline, you can reference keys from this yaml to indicate
+# that the pipeline should map the literal defined here to the node's input at runtime.
+#
+# Kedro precedent defines that the keys in this yaml can be referenced as below when defining
+# node inputs:
+# e.g. "params:my_key_1", "params:my_key_2.my_sub_key_2"
+
+load_datasets:
+  use_case:
+    name: ${globals:project_name}
+    description: Forecast sales for a store
+  training_dataset_name: ${globals:project_name} - Training
+  scoring_dataset_name: ${globals:project_name} - Scoring

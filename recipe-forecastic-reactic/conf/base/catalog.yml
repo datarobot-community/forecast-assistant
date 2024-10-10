@@ -1,0 +1,100 @@
+# This is a registry of files that can be used as node inputs or for storing node outputs.
+#
+# When defining node inputs in the pipeline, reference a key from this yaml to indicate
+# that the pipeline should map the file defined here to the node's input at runtime.
+# Similarly, node outputs can be mapped and persisted to files defined in this yaml.
+#
+# Please see the Kedro Data Catalog documentation to learn more
+# https://docs.kedro.org/en/stable/data/data_catalog.html
+
+# =====================
+# Load Datasets
+# =====================
+
+use_case_id:
+  type: text.TextDataset
+  filepath: data/outputs/use_case_id.txt
+
+training_dataset_id:
+  type: text.TextDataset
+  filepath: data/outputs/dataset_id.txt
+
+scoring_dataset_id:
+  type: text.TextDataset
+  filepath: data/outputs/scoring_dataset_id.txt
+
+dataset_type:
+  type: text.TextDataset
+  filepath: data/outputs/dataset_type.txt
+
+# =====================
+# Forecast Assets
+# =====================
+
+project_id:
+  type: text.TextDataset
+  filepath: data/outputs/project_id.txt
+
+recommended_model_id:
+  type: text.TextDataset
+  filepath: data/outputs/recommended_model_id.txt
+
+recommended_model_name:
+  type: text.TextDataset
+  filepath: data/outputs/recommended_model_name.txt
+
+deployment_id:
+  type: text.TextDataset
+  filepath: data/outputs/deployment_id.txt
+
+important_features:
+  type: json.JSONDataset
+  filepath: data/outputs/important_features.json
+
+what_if_features:
+  type: json.JSONDataset
+  filepath: data/outputs/what_if_features.json
+
+date_format:
+  type: text.TextDataset
+  filepath: data/outputs/date_format.txt
+
+timestep_settings:
+  type: json.JSONDataset
+  filepath: data/outputs/timestep_settings.json
+
+app_urls:
+  type: json.JSONDataset
+  filepath: data/outputs/app_urls.json
+
+# ==========================
+# Deployment Configuration
+# ==========================
+
+prediction_server:
+  type: kedro_datasets.json.JSONDataset
+  filepath: data/outputs/prediction_server.json
+
+predictions_are_working:
+  type: text.TextDataset
+  filepath: data/outputs/predictions_are_working.txt
+
+# ==========================
+# Application Assets
+# ==========================
+
+application_id:
+  type: kedro_datasets.text.TextDataset
+  filepath: data/outputs/application_id.txt
+
+dr_llm_credential_id:
+  type: kedro_datasets.text.TextDataset
+  filepath: data/outputs/dr_llm_credential_id.txt
+
+# =====================================
+# Checksums for caching expensive nodes
+# =====================================
+
+"{node}_checksum":
+  type: kedro_datasets.text.TextDataset
+  filepath: "data/checksum/{node}_checksum.txt"

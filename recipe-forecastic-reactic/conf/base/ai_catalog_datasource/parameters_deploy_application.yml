@@ -1,0 +1,38 @@
+# This is a registry of literal parameters that can be used as node inputs and/or node outputs.
+#
+# When defining node inputs in the pipeline, you can reference keys from this yaml to indicate
+# that the pipeline should map the literal defined here to the node's input at runtime.
+#
+# Kedro precedent defines that the keys in this yaml can be referenced as below when defining
+# node inputs:
+# e.g. "params:my_key_1", "params:my_key_2.my_sub_key_2"
+
+deploy_application:
+  dr_credential:
+    name: recipe_forecastic_llm_credential
+    credential_type: api_token
+  custom_app_name: ${globals:project_name} Application
+  environment_name: ${globals:project_name} Application Environment
+  allow_auto_stopping: true # disable to prevent automatic app spin down when unused
+  base_environment_id: 6542cd582a9d3d51bf4ac71e
+  environment_use_cases:
+    - customApplication
+  page_title: Interpretable Forecast
+  graph_y_axis: Value
+  react_frontend_params:
+    page_description: This application mixes predictive AI and generative AI to create an interpretable forecast
+    filterable_categories:
+      - column_name: # A column name to filter series on must go here
+        display_name: # A display name for the column must go here
+      - column_name: # Delete if additional filter is not needed
+        display_name: # Delete if additional filter is not needed
+      - column_name: # Delete if additional filter is not needed
+        display_name: # Delete if additional filter is not needed
+  streamlit_frontend_params:
+    lower_bound_forecast_at_0: True
+    headline_prompt: |
+      You are a data analyst and your job is to explain to non-technical executive business leaders what the data suggests.
+      Executive leadership will provide a sales forecast and you will interpret it and summarize the outlook, highlighting key insights.                         
+      Your response should be only 1 sentence long, not very wordy. It should be like a news headline. Do not put quotation marks around it.
+      Your response, while insightful, should speak to the general direction of the forecast.
+      Even if you're unsure, speak with confidence and certainty.

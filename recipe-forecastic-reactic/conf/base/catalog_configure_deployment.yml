@@ -1,0 +1,20 @@
+# This is a registry of files that can be used as node inputs or for storing node outputs.
+#
+# When defining node inputs in the pipeline, reference a key from this yaml to indicate
+# that the pipeline should map the file defined here to the node's input at runtime.
+# Similarly, node outputs can be mapped and persisted to files defined in this yaml.
+#
+# Please see the Kedro Data Catalog documentation to learn more
+# https://docs.kedro.org/en/stable/data/data_catalog.html
+
+configure_deployment.settings_are_computed:
+  type: text.TextDataset
+  filepath: data/outputs/settings_are_computed.txt
+
+configure_deployment.retraining_policy_id:
+  type: text.TextDataset
+  filepath: data/outputs/retraining_policy_id.txt
+
+configure_deployment.job_definition_id:
+  type: text.TextDataset
+  filepath: data/outputs/job_definition_id.txt

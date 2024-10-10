@@ -1,0 +1,3 @@
+project_name:
+source_data: # one of [file, ai_catalog]
+frontend: # one of [streamlit, react]
