@@ -1,0 +1,13 @@
+name: runtime-params
+
+runtimeParameterDefinitions:
+  - fieldName: llm_endpoint
+    type: string
+  - fieldName: llm_api_key
+    type: credential
+  - fieldName: llm_api_version
+    type: string
+  - fieldName: llm_deployment_name
+    type: string
+  - fieldName: deployment_id
+    type: string

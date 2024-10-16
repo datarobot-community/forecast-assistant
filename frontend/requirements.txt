@@ -1,0 +1,17 @@
+datarobot>=3.4.0
+datarobot-predict>=1.8.3
+openai>=1.31.2
+pandas>=2.2.2
+pyarrow>=17.0.0
+
+# react dependencies
+flask>=3.0.3
+gunicorn==22.0.0
+
+# streamlit dependencies
+plotly==5.18.0
+streamlit==1.31.1
+
+eval-type-backport==0.2.0
+pydantic==2.9.2
+pydantic-settings==2.5.2

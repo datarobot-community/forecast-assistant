@@ -1,0 +1,15 @@
+name: forecastic
+runtime:
+  name: python
+  options:
+    toolchain: pip
+    virtualenv: .venv
+description: Forecasting Application
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: python
+# plugins:
+#   providers:
+#     - name: datarobot
+#       path: ../pulumi-testing/pulumi-datarobot/bin/

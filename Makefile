@@ -12,5 +12,6 @@ fix-licenses: apply-copyright
 check-licenses: copyright-check
 
 lint:
-	ruff format --check recipe-forecastic-reactic/.
-	ruff check recipe-forecastic-reactic/.
+	ruff format --check .
+	ruff check .
+	mypy .

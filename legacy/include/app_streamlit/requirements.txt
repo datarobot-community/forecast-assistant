@@ -1,0 +1,22 @@
+kedro==0.19.5
+kedro-datasets>=2.1.0
+kedro-viz
+ruff==0.3.0
+
+pytest==8.0.1
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+
+datarobot>=3.4.0
+datarobot-predict>=1.8.3
+openai>=1.31.2
+pandas>=2.2.2
+pyarrow>=17.0.0
+
+# react dependencies
+flask>=3.0.3
+gunicorn==22.0.0
+
+# streamlit dependencies
+plotly==5.18.0
+streamlit==1.31.1
