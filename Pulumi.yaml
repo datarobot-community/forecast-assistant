@@ -1,10 +1,10 @@
-name: forecastic
+name: forecast-assistant
 runtime:
   name: python
   options:
     toolchain: pip
     virtualenv: .venv
-description: Forecasting Application
+description: Forecast Assistant
 config:
   pulumi:tags:
     value:

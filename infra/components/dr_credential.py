@@ -5,6 +5,7 @@
 # affiliates.
 # Released under the terms of DataRobot Tool and Utility Agreement.
 
+import json
 from typing import List, Optional, Union
 
 import pulumi
@@ -12,7 +13,6 @@ import pulumi_datarobot as datarobot
 
 from forecastic.credentials import (
     AzureOpenAICredentials,
-    GoogleLLMCredentials,
     LLMCredentials,
 )
 
@@ -43,14 +43,7 @@ class DRCredential(pulumi.ComponentResource):
         if isinstance(self.credential_raw, AzureOpenAICredentials):
             self.credential = datarobot.ApiTokenCredential(
                 **credential_args.model_dump(),
-                api_token=credential.api_key,  # type: ignore[union-attr]
-                opts=pulumi.ResourceOptions(parent=self),
-            )
-        elif isinstance(self.credential_raw, GoogleLLMCredentials):
-            self.credential = datarobot.GoogleCloudCredential(
-                **credential_args.model_dump(),
-                # TODO: update & test once declarative api support arrives
-                source_file=credential.service_account_key,  # type: ignore[union-attr]
+                api_token=credential.api_key,
                 opts=pulumi.ResourceOptions(parent=self),
             )
         else:
@@ -76,34 +69,18 @@ class DRCredential(pulumi.ComponentResource):
                 for key, type_, value in [
                     ("OPENAI_API_KEY", "credential", self.credential.id),
                     (
-                        "AZURE_OPENAI_ENDPOINT",
+                        "OPENAI_API_BASE",
                         "string",
                         self.credential_raw.azure_endpoint,
                     ),
                     (
-                        "AZURE_OPENAI_DEPLOYMENT",
+                        "OPENAI_API_DEPLOYMENT_ID",
                         "string",
                         self.credential_raw.azure_deployment,
                     ),
                     ("OPENAI_API_VERSION", "string", self.credential_raw.api_version),
                 ]
             ]
-        elif isinstance(self.credential_raw, GoogleLLMCredentials):
-            runtime_parameter_values = [
-                datarobot.CustomModelRuntimeParameterValueArgs(
-                    key="GOOGLE_SERVICE_ACCOUNT",
-                    type="credential",
-                    value=self.credential.id,
-                ),
-            ]
-            if self.credential_raw.region is not None:
-                runtime_parameter_values.append(
-                    datarobot.CustomModelRuntimeParameterValueArgs(
-                        key="GOOGLE_REGION",
-                        type="string",
-                        value=self.credential_raw.region,
-                    )
-                )
         else:
             raise NotImplementedError("Unsupported credential type")
         return runtime_parameter_values
@@ -122,34 +99,22 @@ class DRCredential(pulumi.ComponentResource):
                 for key, type_, value in [
                     ("OPENAI_API_KEY", "credential", self.credential.id),
                     (
-                        "AZURE_OPENAI_ENDPOINT",
+                        "OPENAI_API_BASE",
                         "string",
-                        self.credential_raw.azure_endpoint,
+                        json.dumps({"payload": self.credential_raw.azure_endpoint}),
                     ),
                     (
-                        "AZURE_OPENAI_DEPLOYMENT",
+                        "OPENAI_API_DEPLOYMENT_ID",
                         "string",
-                        self.credential_raw.azure_deployment,
+                        json.dumps({"payload": self.credential_raw.azure_deployment}),
                     ),
-                    ("OPENAI_API_VERSION", "string", self.credential_raw.api_version),
+                    (
+                        "OPENAI_API_VERSION",
+                        "string",
+                        json.dumps({"payload": self.credential_raw.api_version}),
+                    ),
                 ]
             ]
-        elif isinstance(self.credential_raw, GoogleLLMCredentials):
-            runtime_parameter_values = [
-                datarobot.ApplicationSourceRuntimeParameterValueArgs(
-                    key="GOOGLE_SERVICE_ACCOUNT",
-                    type="credential",
-                    value=self.credential.id,
-                ),
-            ]
-            if self.credential_raw.region is not None:
-                runtime_parameter_values.append(
-                    datarobot.ApplicationSourceRuntimeParameterValueArgs(
-                        key="GOOGLE_REGION",
-                        type="string",
-                        value=self.credential_raw.region,
-                    )
-                )
         else:
             raise NotImplementedError("Unsupported credential type")
         return runtime_parameter_values

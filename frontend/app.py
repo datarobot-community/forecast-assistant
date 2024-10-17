@@ -5,33 +5,31 @@
 # affiliates.
 # Released under the terms of DataRobot Tool and Utility Agreement.
 
-from __future__ import annotations
-
 import sys
 
 import pandas as pd
+import plotly.graph_objects as go
 import streamlit as st
-from local_helpers import (
-    app_settings,
-    create_chart,
-    get_scoring_data,
-    get_tldr,
-    interpretChartHeadline,
-    scoreForecast,
-)
 
-SCORING_DATASET_ID = app_settings.scoring_dataset_id
-TARGET = app_settings.target
-MULTISERIES_ID_COLUMN = app_settings.multiseries_id_column
+sys.path.append("..")
+
+from forecastic.api import (
+    get_app_settings,
+    get_filters,
+    get_forecast_as_plotly_json,
+    get_llm_summary,
+    get_predictions,
+    get_scoring_data,
+    get_standardized_predictions,
+)
+from forecastic.schema import FilterSpec
+
 CHART_CONFIG = {"displayModeBar": False, "responsive": True}
 
 LOGO = "./DataRobot.png"
 
 sys.setrecursionlimit(10000)
-
-# Set the maximum number of rows and columns to be displayed
-pd.set_option("display.max_rows", None)  # Display all rows
-pd.set_option("display.max_columns", None)  # Display all columns
+app_settings = get_app_settings()
 
 # Configure the page title, favicon, layout, etc
 st.set_page_config(
@@ -46,13 +44,16 @@ with open("./style.css") as f:
 st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
 
+def clean_column_headers(df: pd.DataFrame) -> pd.DataFrame:
+    """Clean column headers for display."""
+    return df.rename(columns=lambda x: x.replace("_", " ").title())
+
+
 def fpa() -> None:
-    # Layout
     titleContainer = st.container()
-    headlineContainer = st.container()
     chartContainer = st.container()
     explanationContainer = st.container()
-    # Header
+
     with titleContainer:
         (
             col1,
@@ -64,61 +65,76 @@ def fpa() -> None:
             unsafe_allow_html=True,
         )
 
-    df = get_scoring_data(SCORING_DATASET_ID)
-
+    if "filters" not in st.session_state:
+        st.session_state["filters"] = get_filters()
     with st.sidebar:
-        series_selection = df[MULTISERIES_ID_COLUMN].unique().tolist()
-
         with st.form(key="sidebar_form"):
-            series = st.selectbox(MULTISERIES_ID_COLUMN, options=series_selection)
-            n_records_to_display = st.number_input(
-                "Number of records to display",
-                min_value=10,
-                max_value=200,
-                value=90,
-                step=10,
-            )
-            sidebarSubmit = st.form_submit_button(label="Run Forecast")
-    if sidebarSubmit:
-        if series is not None:
-            with st.spinner("Processing forecast..."):
-                scoring_data = (
-                    df.loc[df[MULTISERIES_ID_COLUMN] == series]
-                    .reset_index(drop=True)
-                    .copy()
-                )
-                forecast_raw, forecast = scoreForecast(
-                    scoring_data,
-                )
-            with st.spinner("Generating chart..."):
-                st.session_state["chart_headline"] = interpretChartHeadline(
-                    forecast=forecast
-                )
-                st.session_state["chart"] = create_chart(
-                    scoring_data.tail(n_records_to_display),
-                    forecast,
-                    "Forecast for " + str(series),
-                )
-            with st.spinner("Generating explanation..."):
-                explanations, explain_df = get_tldr(
-                    forecast_raw,
-                    TARGET,
-                    temperature=0.0,
-                )
-                st.session_state["forecast_interpretation"] = explanations
-                st.session_state["explanations_df"] = explain_df
+            st.subheader("Select Filters for the Forecast")
 
-    if "chart_headline" in st.session_state:
-        headlineContainer.subheader(st.session_state["chart_headline"])
-    if "chart" in st.session_state:
+            for filter_widget in st.session_state["filters"]:
+                column_name = filter_widget.column_name
+                st.multiselect(
+                    label=filter_widget.display_name,
+                    options=filter_widget.valid_values,
+                    key=f"filter_{column_name}",
+                )
+
+            sidebarSubmit = st.form_submit_button(label="Run Forecast")
+
+        n_historical_records_to_display = st.number_input(
+            "Number of records to display",
+            min_value=10,
+            max_value=200,
+            value=70,
+            step=10,
+        )
+    if sidebarSubmit:
+        with st.spinner("Processing forecast..."):
+            series_selections = []
+            for filter_widget in st.session_state["filters"]:
+                column_name = filter_widget.column_name
+                widget_value = st.session_state[f"filter_{column_name}"]
+                series_selections.append(
+                    FilterSpec(column=column_name, selected_values=widget_value)
+                )
+            try:
+                scoring_data = get_scoring_data(filter_selection=series_selections)
+                st.session_state["scoring_data"] = scoring_data
+            except ValueError as e:
+                st.error(str(e))
+                st.stop()
+            forecast_raw = get_predictions(scoring_data)
+            forecast_processed = get_standardized_predictions(scoring_data)
+
+            st.session_state["forecast_processed"] = forecast_processed
+
+            st.session_state["chart_json"] = get_forecast_as_plotly_json(
+                scoring_data, n_historical_records_to_display
+            )
+
+        with st.spinner("Generating explanation..."):
+            forecast_summary = get_llm_summary(forecast_raw)
+            st.session_state["headline"] = forecast_summary.headline
+            st.session_state["forecast_interpretation"] = forecast_summary.summary_body
+            st.session_state["explanations_df"] = clean_column_headers(
+                pd.DataFrame(
+                    [i.model_dump() for i in forecast_summary.feature_explanations]
+                )
+            )
+
+    if "chart_json" in st.session_state:
+        chart = get_forecast_as_plotly_json(
+            st.session_state.scoring_data, n_historical_records_to_display
+        )
         chartContainer.plotly_chart(
-            st.session_state["chart"], config=CHART_CONFIG, use_container_width=True
+            go.Figure(chart), config=CHART_CONFIG, use_container_width=True
         )
     if "forecast_interpretation" in st.session_state:
         with explanationContainer:
-            st.write("**AI Generated Analysis:**")
+            st.subheader("**AI Generated Analysis:**")
+            st.write(f"**{st.session_state['headline']}**")
             st.write(st.session_state["forecast_interpretation"])
-            with st.expander("Raw Explanations", expanded=False):
+            with st.expander("Important Features", expanded=False):
                 st.write(st.session_state["explanations_df"])
 
 

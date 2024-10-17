@@ -1,145 +1,81 @@
-# Forecastic Reactic Recipe
-Forecastic-reactic is a customizable recipe for building a building forecasts. It is shinier than forecastic.
+# Forecast Assistant
+Forecast Assistant is a customizable app template for building AI powered forecasts. In addition to 
+creating a hosted, shareable user interface, Forecast Assistant provides: 
 
-In addition to creating a hosted, shareable user interface, Forecastic provides:
+* Best in class predictive model training and deployment using DataRobot AutoTS
+* An intelligent explanation of factors driving the forecast, uniquely derived for any series at any time
 
-* Generative forecast summarization explaining important factors in predictions
-* Explorable explanations over time
-* Whatif scenario analysis
+![Using Forecastic](https://s3.amazonaws.com/datarobot_public/drx/recipe_gifs/forecastic-ui.gif)
 
-![reactic-forecastic-gif]
-
-[reactic-forecastic-gif]: https://s3.amazonaws.com/datarobot_public/drx/recipe_gifs/reacticforecastic.gif
 
 ## Getting started
-1. Create a [new][virtualenv-docs] python virtual environment with python >= 3.9.
-
-2. Install `kedro` and create a new kedro project from this template
-   ```bash
-   pip install kedro
-   kedro new --starter=https://github.com/datarobot/recipe-forecastic-reactic.git --checkout main
-   cd your_project_name
+1. ```
+   git clone https://github.com/datarobot/recipe-forecastic-reactic.git
    ```
 
-3. Follow the prompts to choose between using the default dataset (flat file) or providing an ai catalog asset
-
-4. `cd` to the newly created directory and install requirements for this template: `pip install -r requirements.txt`
-
-5. Populate the following credentials in `conf/local/credentials.yml`:
-   ```yaml
-   datarobot:
-     endpoint: <your endpoint>
-     api_token: <your api token>
-     prediction_environment_id: <your prediction environment id>
-
-   azure_openai_llm_credentials:
-     azure_endpoint: <your api endpoint>
-     api_key: <your api key>
-     api_version: <your api version>
-     deployment_name: <your deployment name>
+2. Create the file `.env` in the root directory of the repo and populate your credentials.
+   ```
+   DATAROBOT_API_TOKEN=...
+   DATAROBOT_ENDPOINT=...  # e.g. https://app.datarobot.com/api/v2
+   DATAROBOT_PREDICTION_ENVIRONMENT_ID=...  # dedicated prediction server id from https://app.datarobot.com/console-nextgen/prediction-environments
+   OPENAI_API_KEY=...
+   OPENAI_API_VERSION=...  # e.g. 2024-02-01
+   OPENAI_API_BASE=...  # e.g. https://your_org.openai.azure.com/
+   OPENAI_API_DEPLOYMENT_ID=...  # e.g. gpt-4
+   PULUMI_CONFIG_PASSPHRASE=...  # required, choose an alphanumeric passphrase to be used for encrypting pulumi config
+   ```
+   
+3. Set environment variables using your `.env` file. We have provided a helper script
+   you may use for this step
+   ```
+   # Exports environment variables from .env, activates virtual environment .venv/ if present
+   source set_env.sh
    ```
 
-6. (AI Catalog dataset only) in each of the params files, fill in the empty values with the appropriate values for your dataset. Use the contents of the [`from_file`][from-file-params] folder to see examples of these parameters when they are filled in.
-
-7. Run the pipeline: `kedro run`. Start exploring the pipeline using the kedro GUI: `kedro viz --include-hooks`
-
-![kedro-viz]
-
-[virtualenv-docs]: https://docs.python.org/3/library/venv.html#creating-virtual-environments
-[from-file-params]: https://github.com/datarobot/recipe-forecastic-reactic/tree/main/recipe-forecastic-reactic/conf/base/from_file
-[kedro-viz]:https://s3.amazonaws.com/datarobot_public/drx/recipe_gifs/kedro-viz.gif
-
-## Making changes to the pipeline
-The following files govern pipeline execution. In general, you will not need to modify
-any other boilerplate files as you customize the pipeline.:
-
-- `conf/base/parameters_*.yml`: pipeline configuration options and hyperparameters
-- `conf/local/credentials.yml`: API tokens and other secrets
-- `conf/base/catalog_*.yml`: file storage locations that can be used as node inputs or outputs,
-  including locations of supporting assets to build DR custom models, execution environments
-- `src/your_project_name/pipelines/*/nodes.py`: function definitions for the pipeline nodes
-- `src/your_project_name/pipelines/*/pipeline.py`: node names, inputs and outputs
-- `src/datarobotx/idp`: directory contains function definitions for for reusable idempotent DR nodes
-- `include/`: directory contains raw assets and templates used by the pipeline
-
-For a deeper orientation to kedro principles and project structure visit the [Kedro][kedro-docs]
-documentation.
-
-[kedro-docs]: https://docs.kedro.org/en/stable/
-
-### A note on the frontend
-While most templates include a frontend built in Streamlit, this application template is built
-using the react framework and utilizes private code repositories in order to build a set of static webpages.
-The frontend *cannot* be edited beyond modifying the configuration file parameters returned by the pipeline. Reach out to your DataRobot representative for any changes to the frontend.
-
-### Example changes
-1. Many simple pipeline configuration options can be changed by editing 
-   `conf/base/parameters.yml` and then rerunning the pipeline using `kedro run`,
-   e.g.:
-   * Names for each created DataRobot asset
-   * Feature derviation and forecast windows
-   * Modeling settings such as number of workers and advanced options
-   * Known in advance features
-   * Calendar generation settings
-   * Minimum threshold for important features
-
-2. When not choosing to load datasets from the ai catalog, the training and scoring data for the project are housed in `include/your_project_name/autopilot`; if a new dataset is required, save the new datasets to this directory, edit the corresponding entries in the params_*.yaml files and call `kedro run` after to run the pipeline with the new data.
-
-3. Update function definitions in `nodes.py` to change the actual logic for
-   a step in the pipeline or to define a new node, e.g.:
-   * `put_forecast_distance_into_registered_model_name()`: changes the name of the registered model
-      so that it includes the forecast distance.
-   * `ensure_deployment_settings`: Configures settings such as accuracy tracking and data drift in the deployed model.
-
-4. Add newly defined nodes to the pipeline, change execution order, or reconfigure
-   node input/output connections by editing `pipelines.yaml`.
-   * `generate_calendar()`: this is a node that generates a calendar for the project and could be removed by simply deleting the node and it's corresponding reference `make_autopilot_run`.
-
-### Required inputs for training and scoring (required when using alternative datasets)
-
-There are some special rules for creating the forecastic-reactic web application with this template.
-Specifically, the scoring and training dataset adhere to the following requirements:
-   - A multiseries_id column must exist that uniquely identifies each time series.
-   Note that **even if the dataset is single series**, this column must be present with a constant value in the dataset.
-   - (Scoring dataset only) An association column id column must uniquely identify each row in the scoring dataset. A best practice for creating an association_id column is to concatenate the multiseries_id and date columns.
-   - (Scoring dataset only) The scoring data should contain future dates to be predicted. See the [timeseries docs][timeseries-docs] for information on creating a prediction-ready dataset.
-
-
-[timeseries-docs]: https://docs.datarobot.com/en/docs/modeling/time/ts-predictions.html#create-a-prediction-ready-dataset
-
-## <a name="gh-auth"></a> Authenticating with GitHub
-How to install `gh` [GitHub CLI][GitHub CLI-link]
-
-Run `gh auth login` in the terminal and answer the following questions with:
-- `? What account do you want to log into?` **GitHub.com**
-- `? What is your preferred protocol for Git operations on this host?` **HTTPS**
-- `? Authenticate Git with your GitHub credentials?` **Yes**
-- `? How would you like to authenticate GitHub CLI?` **Login with a web browser**
-
-Copy the code in: `! First copy your one-time code:` **XXXX-XXXX**
-
-Open a web browser at https://github.com/login/device and enter the above code manually.
-
-You should see in the terminal:
-- `✓ Authentication complete.`
-- `✓ Logged in as YOUR_USERNAME`
-
-More details on GitHub authentication [here][gh-docs].
-
-[GitHub CLI-link]: https://github.com/cli/cli
-[gh-docs]: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/about-authentication-to-github#https
-
-
-## Contributing
-
-If you are making changes to the codebase or constructing your own template, then the cycle of running `kedro new`, testing changes on the instantiated pipeline and copying the changes over to the core template can be inconvenient. For faster development, take the following steps:
-1. Clone the repository.
-2. Create a virtual environment and install the requirements: `pip install -r requirements.txt`.
-3. Add your credentials to `recipe-forecastic-reactic/conf/local/credentials.yml`.
-4. Add a file to `recipe-forecastic-reactic/conf/base/globals.yml` with the following content:
-   ```yaml
-   project_name: your_project_name  # Overrides "${globals:project_name}" in parameters.yml
+4. Create a new stack for your project, then provision all resources.
    ```
-5. Copy the `datarobotx` folder containing the idp helpers into the `recipe-forecastic-reactic/src` folder of the recipe template. You can find these by instantiating a new project with `kedro new`.
-6. Define an environment variable `SOURCE=[file|ai_catalog]` and `kedro run` to test your pipeline. For example, to test the pipeline with a file-based source, run `SOURCE=file kedro run`. 
-7. When you are finished, it is usually a good idea to execute `kedro run -p delete_assets`. This will remove DataRobot assets created during the pipeline run and unclutter your DataRobot instance.
+   pulumi stack init YOUR_PROJECT_NAME
+   pulumi up
+   ```
+   Dependencies are automatically installed in a new virtual environment located in `.venv/`.
+
+### Details
+Instructions for installing pulumi are [here][pulumi-install]. In many cases this can be done
+with:
+```
+curl -fsSL https://get.pulumi.com | sh
+pulumi login --local
+```
+
+Python must be installed for this project to run. By default, pulumi will use the python binary
+aliased to `python3` to create a new virtual environment. If you wish to self-manage your virtual
+environment, delete the `virtualenv` and `toolchain` keys from `Pulumi.yaml` before running `pulumi up`.
+
+
+For projects that will be maintained we recommend forking the repo so upstream fixes and
+improvements can be merged in the future.
+
+[pulumi-install]: https://www.pulumi.com/docs/iac/download-install/
+
+## Make changes
+### Change the data and how the model is trained
+1. Edit the following two notebooks:
+   - `notebooks/train_model.ipynb`: training data ingest, preparation, model training settings
+   - `notebooks/prep_scoring_data.ipynb`: scoring data preparation (data is used to show forecast in frontend)
+   
+   The last cell of each notebook writes outputs needed for the rest of the pipeline and must remain.
+2. Run the revised notebooks.
+3. Run `pulumi up` to update your stack with the changes.
+4. For a forecasting app that is continuously updated, consider running `prep_scoring_data.ipynb` on a schedule.
+
+### Change the frontend
+1. Ensure you have already run `pulumi up` at least once (to provision the time series deployment)
+2. Streamlit assets are in `frontend/` and can be directly edited. After provisioning the stack 
+   at least once, you can also test the frontend locally using `streamlit run app.py` from the
+   `frontend/` directory (don't forget to initialize your environment using `source set_env.sh`)
+3. Run `pulumi up` again to update your stack with the changes.
+
+## Delete all provisioned resources
+```
+pulumi down
+```

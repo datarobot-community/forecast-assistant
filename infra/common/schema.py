@@ -57,7 +57,7 @@ class Condition(BaseModel):
 class Intervention(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     action: ModerationAction
-    condition: Condition
+    condition: str
     message: str
     # send_notification: bool
 
@@ -183,24 +183,24 @@ class VectorDatabaseArgs(BaseModel):
 class DatasetArgs(BaseModel):
     resource_name: str
     file_path: str
-    name: str
+    name: str | None = None
 
 
 class UseCaseArgs(BaseModel):
     resource_name: str
-    name: str
+    name: str | None = None
     description: str | None
 
 
 class PredictionEnvironmentArgs(BaseModel):
     resource_name: str
-    name: str
+    name: str | None = None
     platform: GlobalPredictionEnvironmentPlatforms
 
 
 class CredentialArgs(BaseModel):
     resource_name: str
-    name: str
+    name: str | None = None
 
 
 class QaApplicationArgs(BaseModel):
@@ -334,6 +334,7 @@ class AutopilotRunArgs(BaseModel):
 class ApplicationSourceArgs(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     resource_name: str
+    base_environment_id: str
     files: Optional[Any] = None
     folder_path: Optional[str] = None
     name: Optional[str] = None

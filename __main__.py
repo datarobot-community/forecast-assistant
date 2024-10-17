@@ -4,147 +4,134 @@
 # This is proprietary source code of DataRobot, Inc. and its
 # affiliates.
 # Released under the terms of DataRobot Tool and Utility Agreement.
+import pathlib
 
-import time
-
-import datarobot as dr
 import pulumi
 import pulumi_datarobot as datarobot
-from datarobotx.idp.registered_model_versions import (
-    get_or_create_registered_leaderboard_model_version,
-)
-from datarobotx.idp.use_cases import get_or_create_use_case
+import yaml
 
+from forecastic.resources import (
+    ScoringDataset,
+    app_env_name,
+    scoring_dataset_env_name,
+    time_series_deployment_env_name,
+)
+from forecastic.schema import AppSettings
 from infra import (
-    prepare_app,
     settings_app_infra,
-    settings_deploy_forecasts,
-    settings_load_dataset,
+    settings_forecast_deployment,
     settings_main,
 )
+from infra.common.feature_flags import check_feature_flags
+from infra.common.papermill import run_notebook
+from infra.common.urls import get_deployment_url
 from infra.components.dr_credential import DRCredential
-from infra.deploy_forecasts import run_ts_autopilot
-from infra.load_datasets import load_datasets
+from infra.settings_forecast_deployment import (
+    ensure_batch_prediction_job,
+    ensure_retraining_policy,
+    update_dynamic_deployment_settings,
+)
 from infra.settings_llm_credential import credential, credential_args
-from infra.settings_production import (
-    auto_stopping_app,
-    update_batch_prediction_job,
-    update_retraining_policy,
+from infra.settings_main import (
+    model_training_nb,
+    model_training_output_file,
+    scoring_prep_nb,
+    scoring_prep_output_file,
 )
 
-client = dr.client.get_client()
+check_feature_flags(pathlib.Path("infra/feature_flag_requirements.yaml"))
 
-DATAROBOT_API_TOKEN = client.token
-DATAROBOT_ENDPOINT = client.endpoint
-
-start_time = time.time()
-
-pulumi.log.info("Creating use case")
-use_case_id = get_or_create_use_case(
-    token=DATAROBOT_API_TOKEN,
-    endpoint=DATAROBOT_ENDPOINT,
-    name=settings_main.use_case_args["name"],
-    description=settings_main.use_case_args["description"],
-)
-
-# use_case = datarobot.UseCase(
-#     **settings_main.use_case_args, opts=pulumi.ResourceOptions(import_=use_case_id)
-# )
-pulumi.log.info("Creating Datasets")
-dataset_train_id, dataset_scoring_id = load_datasets(
-    use_case_id,
-    training_dataset_args=settings_load_dataset.training_dataset,
-    scoring_dataset_args=settings_load_dataset.scoring_dataset,
-)
-pulumi.log.info("Running Autopilot")
-project_id, recommended_model_id, calendar_id = run_ts_autopilot(
-    create_calendar_args=settings_deploy_forecasts.calendar_args,
-    autopilotrun_args=settings_deploy_forecasts.autopilotrun_args,
-    training_dataset_id=dataset_train_id,
-    use_case_id=use_case_id,
-)
-
-pulumi.log.info("Creating Registered Model")
-registered_model_version_id = get_or_create_registered_leaderboard_model_version(
-    token=DATAROBOT_API_TOKEN,
-    endpoint=DATAROBOT_ENDPOINT,
-    model_id=recommended_model_id,
-    registered_model_name=settings_deploy_forecasts.registered_model_args.name,
-)
-
-pulumi.log.info("Preparing App assets")
-app_files = prepare_app.gather_assets(
-    project_id=project_id,
-    recommended_model_id=recommended_model_id,
-    scoring_dataset_id=dataset_scoring_id,
-)
-
-# =============================== drx-idp Land ↑ ================================================ #
-#                                                                                                 #
-#                                                                                                 #
-# =============================== Pulumi Land ↓ ================================================= #
-
-if settings_main.default_prediction_server_id is None:
-    prediction_environment = datarobot.PredictionEnvironment(
-        **settings_main.prediction_environment_args.model_dump(exclude_none=True),
-    )
+if not model_training_output_file.exists():
+    pulumi.info("Executing model training notebook...")
+    run_notebook(model_training_nb)
 else:
-    prediction_environment = dr.PredictionEnvironment.get(  # type: ignore[attr-defined]
-        settings_main.default_prediction_server_id
+    pulumi.info(
+        f"Using existing model training outputs in '{model_training_output_file}'"
     )
+with open(model_training_output_file) as f:
+    model_training_output = AppSettings(**yaml.safe_load(f))
 
 
-deployment = datarobot.Deployment(
-    prediction_environment_id=prediction_environment.id,
-    registered_model_version_id=registered_model_version_id,
-    **settings_deploy_forecasts.get_deployment_args(project_id=project_id).model_dump(),
+if not scoring_prep_output_file.exists():
+    pulumi.info("Executing scoring data prep notebook...")
+    run_notebook(scoring_prep_nb)
+else:
+    pulumi.info(
+        f"Using existing scoring data prep outputs in '{scoring_prep_output_file}'"
+    )
+with open(scoring_prep_output_file) as f:
+    scoring_prep_output = ScoringDataset(**yaml.safe_load(f))
+
+
+prediction_environment = datarobot.PredictionEnvironment.get(
+    f"Forecast Assistant Prediction Environment [{settings_main.project_name}]",
+    settings_main.default_prediction_server_id,
 )
 
+update_dynamic_deployment_settings(
+    settings_forecast_deployment.deployment_args,
+    datetime_partition_column=model_training_output.datetime_partition_column_transformed,
+    date_format=model_training_output.date_format,
+    prediction_interval=model_training_output.prediction_interval,
+)
+forecast_deployment = datarobot.Deployment(
+    prediction_environment_id=prediction_environment.id,
+    registered_model_version_id=model_training_output.registered_model_version_id,
+    **settings_forecast_deployment.deployment_args.model_dump(),
+)
+
+forecast_deployment.id.apply(
+    func=lambda deployment_id: ensure_batch_prediction_job(
+        deployment_id=deployment_id, dataset_scoring_id=scoring_prep_output.id
+    )
+)
+
+forecast_deployment.id.apply(
+    func=lambda deployment_id: ensure_retraining_policy(
+        deployment_id=deployment_id,
+        calendar_id=model_training_output.calendar_id,
+        training_dataset_id=scoring_prep_output.id,
+    )
+)
 
 llm_credential = DRCredential(
-    resource_name="llm-credential",
+    resource_name=f"Generic LLM Credential [{settings_main.project_name}]",
     credential=credential,
     credential_args=credential_args,
 )
 
-
 app_runtime_parameters = [
     datarobot.ApplicationSourceRuntimeParameterValueArgs(
-        key="deployment_id",
+        key=time_series_deployment_env_name,
         type="deployment",
-        value=deployment.id,
-    )
+        value=forecast_deployment.id,
+    ),
+    datarobot.ApplicationSourceRuntimeParameterValueArgs(
+        key=scoring_dataset_env_name,
+        type="string",
+        value=scoring_prep_output.id,
+    ),
 ] + llm_credential.app_runtime_parameter_values
 
-
 application_source = datarobot.ApplicationSource(
-    files=app_files,
+    files=settings_app_infra.get_app_files(app_runtime_parameters),
     runtime_parameter_values=app_runtime_parameters,
     **settings_app_infra.app_source_args,
 )
 
 app = datarobot.CustomApplication(
     resource_name=settings_app_infra.app_resource_name,
-    name=settings_app_infra.app_name,
     source_version_id=application_source.version_id,
 )
 
-deployment.id.apply(
-    func=lambda deployment_id: update_batch_prediction_job(
-        deployment_id=deployment_id, dataset_scoring_id=dataset_scoring_id
-    )
+app.id.apply(settings_app_infra.ensure_app_settings)
+
+
+pulumi.export(time_series_deployment_env_name, forecast_deployment.id)
+pulumi.export(scoring_dataset_env_name, scoring_prep_output.id)
+pulumi.export(
+    settings_forecast_deployment.deployment_args.resource_name,
+    forecast_deployment.id.apply(get_deployment_url),
 )
-
-deployment.id.apply(
-    func=lambda deployment_id: update_retraining_policy(
-        deployment_id=deployment_id,
-        calendar_id=calendar_id,
-        training_dataset_id=dataset_train_id,
-    )
-)
-
-app.id.apply(auto_stopping_app)
-
-
-pulumi.export("deployment_id", deployment.id)
-pulumi.export("app_url", app.application_url)
+pulumi.export(app_env_name, app.id)
+pulumi.export(settings_app_infra.app_resource_name, app.application_url)

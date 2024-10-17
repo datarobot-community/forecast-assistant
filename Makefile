@@ -15,3 +15,7 @@ lint:
 	ruff format --check .
 	ruff check .
 	mypy .
+
+fix-lint:
+	ruff format .
+	ruff check . --fix

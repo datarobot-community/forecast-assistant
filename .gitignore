@@ -3,3 +3,5 @@ __pycache__/
 venv
 .venv
 .env
+.DS_Store
+frontend/dynamic_app_settings.json

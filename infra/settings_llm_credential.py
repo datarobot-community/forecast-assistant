@@ -16,6 +16,7 @@ from .settings_main import project_name
 
 try:
     credential = AzureOpenAICredentials()
+    credential.test()
 except ValidationError as e:
     raise ValueError(
         "Unable to load LLM credentials. "
@@ -23,6 +24,5 @@ except ValidationError as e:
     ) from e
 
 credential_args = CredentialArgs(
-    resource_name="llm-specific-credential",
-    name=f"LLM Credential [{project_name}]",
+    resource_name=f"Forecast Assistant LLM Credential [{project_name}]",
 )
