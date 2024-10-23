@@ -69,6 +69,9 @@ improvements can be merged in the future.
 This app template requires certain feature flags to be enabled or disabled in your DataRobot account.
 The required feature flags can be found in [infra/feature_flag_requirements.yaml](infra/feature_flag_requirements.yaml). Contact your DataRobot representative for more information.
 
+## Architecture Overview
+![Forecast Assistant](https://s3.amazonaws.com/datarobot_public/drx/recipe_gifs/forecasting_architecture.svg)
+
 ## Make changes
 ### Change the data and how the model is trained
 1. Edit the following two notebooks:

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+import logging
 import os
 import time
 from typing import Optional
@@ -41,6 +42,8 @@ if not app_url:
 
 
 run_visual = str_to_bool(os.environ.get("RUN_VISUAL", "True"))
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="session")
@@ -79,7 +82,7 @@ def check_if_logged_in(browser: webdriver.Chrome) -> bool:
             if apc_user_id:
                 return True
         except Exception as e:
-            print(f"Error accessing localStorage: {e}")
+            logger.error(f"Error accessing localStorage: {e}")
 
     # Open the login URL
     browser.get(login_url)
@@ -109,6 +112,6 @@ def check_if_logged_in(browser: webdriver.Chrome) -> bool:
         if apc_user_id:
             return True
     except Exception as e:
-        print(f"Error accessing localStorage after login: {e}")
+        logger.error(f"Error accessing localStorage after login: {e}")
 
     return False
