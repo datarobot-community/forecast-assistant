@@ -5,7 +5,7 @@ creating a hosted, shareable user interface, Forecast Assistant provides:
 * Best in class predictive model training and deployment using DataRobot AutoTS
 * An intelligent explanation of factors driving the forecast, uniquely derived for any series at any time
 
-![Using Forecastic](https://s3.amazonaws.com/datarobot_public/drx/recipe_gifs/forecastic-ui.gif)
+![Using Forecastic](https://s3.amazonaws.com/datarobot_public/drx/recipe_gifs/launch_gifs/forecast-assistant-smallest.gif)
 
 
 ## Getting started
@@ -17,7 +17,8 @@ creating a hosted, shareable user interface, Forecast Assistant provides:
    ```
    DATAROBOT_API_TOKEN=...
    DATAROBOT_ENDPOINT=...  # e.g. https://app.datarobot.com/api/v2
-   DATAROBOT_PREDICTION_ENVIRONMENT_ID=...  # dedicated prediction server id from https://app.datarobot.com/console-nextgen/prediction-environments
+   # [Optional]: Provide an ID of a dedicated prediction environment - otherwise we create a new serverless prediction environment
+   # DATAROBOT_PREDICTION_ENVIRONMENT_ID=...  # dedicated prediction server id from https://app.datarobot.com/console-nextgen/prediction-environments
    OPENAI_API_KEY=...
    OPENAI_API_VERSION=...  # e.g. 2024-02-01
    OPENAI_API_BASE=...  # e.g. https://your_org.openai.azure.com/
@@ -25,19 +26,26 @@ creating a hosted, shareable user interface, Forecast Assistant provides:
    PULUMI_CONFIG_PASSPHRASE=...  # required, choose an alphanumeric passphrase to be used for encrypting pulumi config
    ```
    
-3. Set environment variables using your `.env` file. We have provided a helper script
-   you may use for this step
+3. Set environment variables using your `.env` file. We have provided a helper script:
    ```
-   # Exports environment variables from .env, activates virtual environment .venv/ if present
    source set_env.sh
+   # on Windows: set_env.bat or Set-Env.ps1
    ```
+   This script will export environment variables from `.env` and activate the virtual 
+   environment in `.venv/` (if present).
 
-4. Create a new stack for your project, then provision all resources.
+4. [For first time users] Install the pulumi CLI following the instructions [here](#details).
+
+
+5. Create a new stack for your project (update the placeholder YOUR_PROJECT_NAME).
    ```
    pulumi stack init YOUR_PROJECT_NAME
+   ```
+
+6. Provision all resources, install dependencies in a new virtual environment located in `.venv/`
+   ```
    pulumi up
    ```
-   Dependencies are automatically installed in a new virtual environment located in `.venv/`.
 
 ### Details
 Instructions for installing pulumi are [here][pulumi-install]. In many cases this can be done
@@ -57,6 +65,10 @@ improvements can be merged in the future.
 
 [pulumi-install]: https://www.pulumi.com/docs/iac/download-install/
 
+### Feature Flags
+This app template requires certain feature flags to be enabled or disabled in your DataRobot account.
+The required feature flags can be found in [infra/feature_flag_requirements.yaml](infra/feature_flag_requirements.yaml). Contact your DataRobot representative for more information.
+
 ## Make changes
 ### Change the data and how the model is trained
 1. Edit the following two notebooks:
@@ -74,6 +86,11 @@ improvements can be merged in the future.
    at least once, you can also test the frontend locally using `streamlit run app.py` from the
    `frontend/` directory (don't forget to initialize your environment using `source set_env.sh`)
 3. Run `pulumi up` again to update your stack with the changes.
+
+## Share results
+1. Log into app.datarobot.com
+2. Navigate to Registry > Application.
+3. Navigate to the Application row you want to share and click on the three dots on the right and select Share from the dropdown. 
 
 ## Delete all provisioned resources
 ```

@@ -1,9 +1,17 @@
-# Copyright 2024 DataRobot, Inc. and its affiliates.
-# All rights reserved.
-# DataRobot, Inc.
-# This is proprietary source code of DataRobot, Inc. and its
-# affiliates.
-# Released under the terms of DataRobot Tool and Utility Agreement.
+# Copyright 2024 DataRobot, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from typing import cast
 
 import datarobot as dr
@@ -134,7 +142,10 @@ def ensure_batch_prediction_job(deployment_id: str, dataset_scoring_id: str) -> 
 
 
 def ensure_retraining_policy(
-    deployment_id: str, calendar_id: str, training_dataset_id: str
+    deployment_id: str,
+    calendar_id: str,
+    training_dataset_id: str,
+    prediction_environment_id: str,
 ) -> None:
     """Ensure retraining policy is configured on a TS deployment."""
     retraining_policy_settings.timeSeriesOptions = TimeSeriesOptions(
@@ -146,6 +157,7 @@ def ensure_retraining_policy(
         token=client.token,
         deployment_id=deployment_id,
         dataset_id=training_dataset_id,
+        prediction_environment_id=prediction_environment_id,
         **retraining_policy_settings.model_dump(mode="json"),
     )
 

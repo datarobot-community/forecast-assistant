@@ -1,6 +1,0 @@
-exclude = ["hooks"]
-
-[lint]
-# line-length = 120
-# target-version = "py312"
-select = ["E4", "E7", "E9", "F", "I"]

@@ -1,9 +1,17 @@
-# Copyright 2024 DataRobot, Inc. and its affiliates.
-# All rights reserved.
-# DataRobot, Inc.
-# This is proprietary source code of DataRobot, Inc. and its
-# affiliates.
-# Released under the terms of DataRobot Tool and Utility Agreement.
+# Copyright 2024 DataRobot, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 
 from __future__ import annotations
 
@@ -12,6 +20,7 @@ import json
 import subprocess
 import sys
 from typing import Any, List, Optional
+from urllib.parse import urljoin
 
 import datarobot as dr
 import pandas as pd
@@ -28,6 +37,7 @@ from forecastic.credentials import AzureOpenAICredentials
 from forecastic.resources import ScoringDataset, TimeSeriesDeployment
 from forecastic.schema import (
     AppSettings,
+    AppUrls,
     FilterSpec,
     ForecastSummary,
     MultiSelectFilter,
@@ -76,6 +86,20 @@ except (FileNotFoundError, ValidationError) as e:
 
 def get_app_settings() -> AppSettings:
     return app_settings
+
+
+def get_app_urls() -> AppUrls:
+    base_url = urljoin(dr.Client().endpoint, "..")  # type: ignore[attr-defined]
+    dataset_url = (
+        f"usecases/{app_settings.use_case_id}/explore/dataset/{scoring_dataset_id}"
+    )
+    model_url = f"usecases/{app_settings.use_case_id}/model/leaderboard/{app_settings.project_id}/{app_settings.model_id}"
+    deployment_url = f"console-nextgen/deployments/{time_series_deployment_id}/overview"
+    return AppUrls(
+        dataset=urljoin(base_url, dataset_url),
+        model=urljoin(base_url, model_url),
+        deployment=urljoin(base_url, deployment_url),
+    )
 
 
 @functools.lru_cache(maxsize=16)
