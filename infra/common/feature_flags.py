@@ -1,9 +1,17 @@
-# Copyright 2024 DataRobot, Inc. and its affiliates.
-# All rights reserved.
-# DataRobot, Inc.
-# This is proprietary source code of DataRobot, Inc. and its
-# affiliates.
-# Released under the terms of DataRobot Tool and Utility Agreement.
+# Copyright 2024 DataRobot, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 
 import pathlib
 from typing import Dict, Iterable, List, Tuple
@@ -67,6 +75,10 @@ def check_feature_flags(
             f"Feature flag '{flag}' is required to be {correct_value} but is no longer a valid DataRobot feature flag."
         )
     for flag, correct_value in corrections:
-        pulumi.error(f"Required feature flag '{flag}' must be set to {correct_value}.")
+        pulumi.error(
+            f"This app template requires that feature flag '{flag}' is set "
+            f"to {correct_value}. Contact your DataRobot representative for "
+            "assistance."
+        )
     if len(corrections) and raise_corrections:
-        raise pulumi.RunError("Please correct feature flag settings.")
+        raise pulumi.RunError("Please correct feature flag settings and run again.")

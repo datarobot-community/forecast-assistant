@@ -1,13 +1,21 @@
-# Copyright 2024 DataRobot, Inc. and its affiliates.
-# All rights reserved.
-# DataRobot, Inc.
-# This is proprietary source code of DataRobot, Inc. and its
-# affiliates.
-# Released under the terms of DataRobot Tool and Utility Agreement.
+# Copyright 2024 DataRobot, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 from pathlib import Path
 
-import datarobot as dr
+from infra.common.globals import GlobalPredictionEnvironmentPlatforms
 
 from .common.schema import (
     PredictionEnvironmentArgs,
@@ -18,21 +26,13 @@ from .common.stack import get_stack
 project_name = get_stack()
 
 
-try:
-    default_prediction_server_id = os.environ["DATAROBOT_PREDICTION_ENVIRONMENT_ID"]
-except KeyError as e:
-    raise ValueError(
-        (
-            "Unable to load DataRobot prediction environment id. "
-            "Verify you have setup your environment variables as described in README.md."
-        )
-    ) from e
-
+default_prediction_server_id = os.getenv("DATAROBOT_PREDICTION_ENVIRONMENT_ID", None)
 
 prediction_environment_args = PredictionEnvironmentArgs(
     resource_name=f"Forecast Assistant Prediction Environment [{project_name}]",
-    platform=dr.PredictionEnvironmentPlatform.DATAROBOT_SERVERLESS,  # type: ignore[attr-defined]
-)
+    platform=GlobalPredictionEnvironmentPlatforms.DATAROBOT_SERVERLESS,
+).model_dump(mode="json", exclude_none=True)
+
 
 use_case_args = UseCaseArgs(
     resource_name=f"Forecast Assistant Use Case [{project_name}]",

@@ -13,22 +13,15 @@
 # limitations under the License.
 
 
-import pathlib
-import sys
-from typing import Optional
+import pytest
+from selenium import webdriver
+from selenium.webdriver.common.by import By
 
-import papermill as pm
+from tests.e2e.utils import wait_for_element_to_be_visible
 
 
-def run_notebook(
-    nb_path: pathlib.Path, output_path: Optional[pathlib.Path] = None
-) -> None:
-    pm.execute_notebook(
-        nb_path,
-        output_path,
-        cwd=nb_path.parent,
-        log_output=False,
-        progress_bar=False,
-        stderr_file=sys.stderr,
-        stdout_file=sys.stdout,
-    )
+@pytest.mark.usefixtures("check_if_logged_in")
+def test_app_loaded(browser: webdriver.Chrome, get_app_url: str) -> None:
+    browser.get(get_app_url)
+
+    assert wait_for_element_to_be_visible(browser, By.ID, "root")

@@ -1,9 +1,17 @@
-# Copyright 2024 DataRobot, Inc. and its affiliates.
-# All rights reserved.
-# DataRobot, Inc.
-# This is proprietary source code of DataRobot, Inc. and its
-# affiliates.
-# Released under the terms of DataRobot Tool and Utility Agreement.
+# Copyright 2024 DataRobot, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import pathlib
 
 import pulumi
@@ -63,10 +71,15 @@ with open(scoring_prep_output_file) as f:
     scoring_prep_output = ScoringDataset(**yaml.safe_load(f))
 
 
-prediction_environment = datarobot.PredictionEnvironment.get(
-    f"Forecast Assistant Prediction Environment [{settings_main.project_name}]",
-    settings_main.default_prediction_server_id,
-)
+if settings_main.default_prediction_server_id is None:
+    prediction_environment = datarobot.PredictionEnvironment(
+        **settings_main.prediction_environment_args,
+    )
+else:
+    prediction_environment = datarobot.PredictionEnvironment.get(
+        "Forecast Assistant Prediction Environment [PRE-EXISTING]",
+        settings_main.default_prediction_server_id,
+    )
 
 update_dynamic_deployment_settings(
     settings_forecast_deployment.deployment_args,
@@ -86,11 +99,15 @@ forecast_deployment.id.apply(
     )
 )
 
-forecast_deployment.id.apply(
-    func=lambda deployment_id: ensure_retraining_policy(
-        deployment_id=deployment_id,
+
+pulumi.Output.all(
+    deployment_id=forecast_deployment.id,
+    prediction_environment_id=prediction_environment.id,
+).apply(
+    lambda kwargs: ensure_retraining_policy(
         calendar_id=model_training_output.calendar_id,
         training_dataset_id=scoring_prep_output.id,
+        **kwargs,
     )
 )
 

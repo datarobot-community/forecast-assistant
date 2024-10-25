@@ -1,9 +1,17 @@
-# Copyright 2024 DataRobot, Inc. and its affiliates.
-# All rights reserved.
-# DataRobot, Inc.
-# This is proprietary source code of DataRobot, Inc. and its
-# affiliates.
-# Released under the terms of DataRobot Tool and Utility Agreement.
+# Copyright 2024 DataRobot, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 
 from __future__ import annotations
 
@@ -54,23 +62,30 @@ class AppSettings(BaseModel):
     important_features: List[dict[str, Any]] = Field(
         description="List of most important features exposed to the front end for rendering"
     )
-    # TODO:
-    prediction_interval: int = Field(description="")
+    prediction_interval: int = Field(
+        description="Prediction interval for upper and lower bound of forecast"
+    )
 
-    # TODO: application_name, app_urls (dataset_url, model_url, deployment_url)
+    use_case_id: str
     project_id: str
     model_id: str
     model_name: str
     date_format: str
-    target: str
+    target: str = Field(
+        description="Name of the untransformed target column in the training dataset"
+    )
     multiseries_id_column: str
     feature_derivation_window_start: int
     feature_derivation_window_end: int
     forecast_window_start: int
     forecast_window_end: int
     timestep_settings: Dict[str, Any]
-    datetime_partition_column: str
-    datetime_partition_column_transformed: str
+    datetime_partition_column: str = Field(
+        description="Name of the untransformed datetime partition column in the training dataset"
+    )
+    datetime_partition_column_transformed: str = Field(
+        description="Name of the DataRobot renamed datetime partition column"
+    )
     training_dataset_id: str
     calendar_id: str
     filterable_categories: List[CategoryFilter] = Field(
@@ -83,7 +98,6 @@ class AppSettings(BaseModel):
     headline_prompt: str
     model_config = ConfigDict(protected_namespaces=())
 
-    # TODO: distinguish between raw/transformed
     @classmethod
     def from_registered_model_version(
         cls,
@@ -102,7 +116,10 @@ class AppSettings(BaseModel):
             raise ValueError(
                 "Registered model version must be associated with a DR modeling project"
             )
-
+        use_case_id = cast(
+            str,
+            registered_model_version.source_meta.get("use_case_details").get("id"),  # type: ignore
+        )
         project_id = cast(str, registered_model_version.source_meta.get("project_id"))
         project = dr.Project.get(project_id)  # type: ignore
         datetime_partitioning = dr.DatetimePartitioning.get(project_id)
@@ -142,6 +159,7 @@ class AppSettings(BaseModel):
             what_if_features=what_if_features,
             important_features=important_features,
             prediction_interval=prediction_interval,
+            use_case_id=use_case_id,
             project_id=project_id,
             model_id=registered_model_version.model_id,
             model_name=dr.Model.get(  # type: ignore
@@ -209,3 +227,9 @@ class ForecastSummary(BaseModel):
     headline: str
     summary_body: str
     feature_explanations: list[ExplanationRow]
+
+
+class AppUrls(BaseModel):
+    dataset: str
+    model: str
+    deployment: str
