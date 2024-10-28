@@ -90,6 +90,9 @@ This app template requires certain feature flags to be enabled or disabled in yo
    `frontend/` directory (don't forget to initialize your environment using `source set_env.sh`).
 3. Run `pulumi up` again to update your stack with the changes.
 
+#### Change the language in the frontend
+Optionally, you can set the application locale here as well. e.g. `MAIN_APP_LOCALE=es_LA`. Supported locales include Spanish (es_LA) and Japanese (ja_JP) in addition to the default language (en_US).
+
 ## Share results
 1. Log into the DataRobot application.
 2. Navigate to **Registry > Applications**.

@@ -19,9 +19,10 @@ from typing import List, Tuple
 import datarobot as dr
 import pulumi_datarobot as datarobot
 
-from .common.globals import GlobalRuntimeEnvironment
-from .common.schema import ApplicationSourceArgs
-from .settings_main import project_name
+from forecastic.i18n import LanguageCode, LocaleSettings
+from infra.common.globals import GlobalRuntimeEnvironment
+from infra.common.schema import ApplicationSourceArgs
+from infra.settings_main import project_name
 
 application_path = Path("frontend/")
 
@@ -31,6 +32,7 @@ app_source_args = ApplicationSourceArgs(
 ).model_dump(mode="json", exclude_none=True)
 
 app_resource_name: str = f"Forecast Assistant Application [{project_name}]"
+application_locale = LocaleSettings().app_locale
 
 
 def ensure_app_settings(app_id: str) -> None:
@@ -74,7 +76,7 @@ def get_app_files(
 ) -> List[Tuple[str, str]]:
     _prep_metadata_yaml(runtime_parameter_values)
 
-    return [
+    source_files = [
         (str(f), str(f.relative_to(application_path)))
         for f in application_path.glob("**/*")
         if f.is_file()
@@ -86,8 +88,18 @@ def get_app_files(
         ("forecastic/api.py", "forecastic/api.py"),
         ("forecastic/resources.py", "forecastic/resources.py"),
         ("forecastic/credentials.py", "forecastic/credentials.py"),
+        ("forecastic/i18n.py", "forecastic/i18n.py"),
         (
             f"frontend/train_model_output.{project_name}.yaml",
             "train_model_output.yaml",
         ),
     ]
+
+    if application_locale != LanguageCode.EN:
+        source_files.append(
+            (
+                f"forecastic/locale/{application_locale}/LC_MESSAGES/base.mo",
+                f"forecastic/locale/{application_locale}/LC_MESSAGES/base.mo",
+            )
+        )
+    return source_files

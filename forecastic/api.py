@@ -34,6 +34,7 @@ from pydantic import ValidationError
 sys.path.append("..")
 
 from forecastic.credentials import AzureOpenAICredentials
+from forecastic.i18n import gettext
 from forecastic.resources import ScoringDataset, TimeSeriesDeployment
 from forecastic.schema import (
     AppSettings,
@@ -75,7 +76,7 @@ try:
     )
 except (FileNotFoundError, ValidationError) as e:
     raise ValueError(
-        (
+        gettext(
             "Unable to load Deployment IDs or Application Settings. "
             "If running locally, verify you have selected the correct "
             "stack and that it is active using `pulumi stack output`. "
@@ -132,7 +133,9 @@ def get_scoring_data(
             df = df[df[column_name].isin(widget_values)]
     if len(df) == 0:
         raise ValueError(
-            "No data available for the selected series. Try a different combination of filters."
+            gettext(
+                "No data available for the selected series. Try a different combination of filters."
+            )
         )
     return df.to_dict(orient="records")  # type: ignore[no-any-return]
 
@@ -295,7 +298,7 @@ def get_forecast_as_plotly_json(
             x=history.timestamp,
             y=history[target],
             mode="lines",
-            name=f"{target} History",
+            name=gettext("{target} History").format(target=target),
             line_shape="spline",
             line=dict(color="#ff9e00", width=2),
         )
@@ -305,7 +308,7 @@ def get_forecast_as_plotly_json(
             x=forecast["date_id"],
             y=forecast["low"],
             mode="lines",
-            name="Low forecast",
+            name=gettext("Low forecast"),
             line_shape="spline",
             line=dict(color="#63b6f9", width=0.5, dash="dot"),
         )
@@ -315,7 +318,7 @@ def get_forecast_as_plotly_json(
             x=forecast["date_id"],
             y=forecast["high"],
             mode="lines",
-            name="High forecast",
+            name=gettext("High forecast"),
             line_shape="spline",
             line=dict(color="#63b6f9", width=0.5, dash="dot"),
         )
@@ -326,7 +329,7 @@ def get_forecast_as_plotly_json(
             x=forecast["date_id"],
             y=forecast["prediction"],
             mode="lines",
-            name=f"Total {target} Forecast",
+            name=gettext("Total {target} Forecast").format(target=target),
             line_shape="spline",
             line=dict(color="#63b6f9", width=2),
         )
@@ -455,19 +458,19 @@ def _summarize_dataframe(
     """
     target = app_settings.target
     if ex_target:
-        prompt = (
+        prompt = gettext(
             "The following are the most important exogenous features "
-            + f"in the forecasting model's predictions of `{target}`. "
+            + "in the forecasting model's predictions of `{target}`. "
             + "Provide a 3-4 sentence summary of the exogenous "
             + "driver(s) for the forecast, explain any potential "
             + "intuitive, qualitative interpretation(s) "
             + "or explanation(s)."
-        )
+        ).format(target=target)
         explain_df = prompt_dataframe[
             ~prompt_dataframe["feature"].str.startswith(target + " (")
         ].copy()
     else:
-        prompt = (
+        prompt = gettext(
             "The following are the most important features in the "
             + "forecasting model's predictions. Provide a 3-4 sentence "
             + "summary of the key cyclical and/or trend drivers for the "
@@ -519,7 +522,7 @@ def _make_headline(standardized_predictions: list[PredictionRow]) -> str:
     """Generate subheader for explanation."""
     df = pd.DataFrame([i.model_dump() for i in standardized_predictions])
     return _get_completion(
-        prompt="Forecast:" + str(df[["date_id", "prediction"]]),
+        prompt=gettext("Forecast:") + str(df[["date_id", "prediction"]]),
         system_prompt=app_settings.headline_prompt,
         temperature=0.2,
     )
