@@ -94,6 +94,7 @@ forecast_deployment = datarobot.Deployment(
     prediction_environment_id=prediction_environment.id,
     registered_model_version_id=model_training_output.registered_model_version_id,
     **settings_forecast_deployment.deployment_args.model_dump(),
+    use_case_ids=[model_training_output.use_case_id],
 )
 
 forecast_deployment.id.apply(
@@ -145,6 +146,7 @@ application_source = datarobot.ApplicationSource(
 app = datarobot.CustomApplication(
     resource_name=settings_app_infra.app_resource_name,
     source_version_id=application_source.version_id,
+    use_case_ids=[model_training_output.use_case_id],
 )
 
 app.id.apply(settings_app_infra.ensure_app_settings)

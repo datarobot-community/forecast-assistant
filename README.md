@@ -7,16 +7,23 @@ The forecast assistant is a customizable application template for building AI-po
 
 ![Using Forecastic](https://s3.amazonaws.com/datarobot_public/drx/recipe_gifs/launch_gifs/forecast-assistant-smallest.gif)
 
-
 ## Setup
 
+1. If `pulumi` is not already installed, install the CLI following instructions [here](https://www.pulumi.com/docs/iac/download-install/). 
+   After installing for the first time, restart your terminal and run:
+   ```
+   pulumi login --local  # omit --local to use Pulumi Cloud (requires separate account)
+   ```
 
-1. Clone the template's repository.
+2. Clone the template repository.
+
    ```
    git clone https://github.com/datarobot-community/forecast-assistant.git
+   cd forecast-assistant
    ```
 
-2. Create the file `.env` in the root directory of the repository and populate your credentials.
+3. Rename the file `.env.template` to `.env` in the root directory of the repo and populate your credentials.
+
    ```
    DATAROBOT_API_TOKEN=...
    DATAROBOT_ENDPOINT=...  # e.g. https://app.datarobot.com/api/v2
@@ -29,44 +36,14 @@ The forecast assistant is a customizable application template for building AI-po
    PULUMI_CONFIG_PASSPHRASE=...  # required, choose an alphanumeric passphrase to be used for encrypting pulumi config
    ```
    
-3. Set environment variables using your `.env` file. Use the helper script provided below:
+4. In a terminal run:
    ```
-   source set_env.sh
-   # on Windows: set_env.bat or Set-Env.ps1
-   ```
-   This script exports environment variables from `.env` and activate the virtual 
-   environment in `.venv/` (if present).
-
-4. If you're a first-time user, install the Pulumi CLI by following the instructions [here](#details) before proceeding with this workflow.
-
-5. Create a new stack for your project (update the placeholder `YOUR_PROJECT_NAME`).
-   ```
-   pulumi stack init YOUR_PROJECT_NAME
+   python quickstart.py YOUR_PROJECT_NAME  # Windows users may have to use `py` instead of `python`
    ```
 
-6. Provision all resources and install dependencies in a new virtual environment located in `.venv/`.
-   ```
-   pulumi up
-   ```
+Advanced users desiring control over virtual environment creation, dependency installation, environment variable setup
+and `pulumi` invocation see [here](#setup-for-advanced-users).
 
-### Details
-Instructions for installing Pulumi are [here](https://www.pulumi.com/docs/iac/download-install/). In many cases this can be done with the code below:
-```
-curl -fsSL https://get.pulumi.com | sh
-pulumi login --local
-```
-
-Restart your terminal.
-```
-source set_env.sh
-# on Windows: set_env.bat or Set-Env.ps1
-```
-
-Python must be installed for this project to run. By default, pulumi will use the Python binary aliased to `python3` to create a new virtual environment. If you wish to self-manage your virtual environment, delete the `virtualenv` and `toolchain` keys from `Pulumi.yaml` before running `pulumi up`. For projects that will be maintained, DataRobot recommends forking the repo so upstream fixes and improvements can be merged in the future.
-
-### Feature flags
-
-This app template requires certain feature flags to be enabled or disabled in your DataRobot account. The required feature flags can be found in [infra/feature_flag_requirements.yaml](infra/feature_flag_requirements.yaml). Contact your DataRobot representative or administrator for information on enabling the feature.
 
 ## Architecture Overview
 ![Forecast Assistant](https://s3.amazonaws.com/datarobot_public/drx/recipe_gifs/forecasting_architecture.svg)
@@ -102,3 +79,25 @@ Optionally, you can set the application locale here as well. e.g. `MAIN_APP_LOCA
 ```
 pulumi down
 ```
+Then run the jupyter notebook `notebooks/delete_non_pulumi_assets.ipynb`
+
+## Setup for advanced users
+For manual control over the setup process adapt the following steps for MacOS/Linux to your environent:
+```
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+source set_env.sh
+pulumi stack init YOUR_PROJECT_NAME
+pulumi up 
+```
+e.g. for Windows/conda/cmd.exe this would be:
+```
+conda create --prefix .venv pip
+conda activate .\.venv
+pip install -r requirements.txt
+set_env.bat
+pulumi stack init YOUR_PROJECT_NAME
+pulumi up 
+```
+For projects that will be maintained, DataRobot recommends forking the repo so upstream fixes and improvements can be merged in the future.

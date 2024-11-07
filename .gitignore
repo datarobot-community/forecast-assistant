@@ -10,3 +10,6 @@ frontend/train_model_output.*.yaml
 notebooks/prep_scoring_data_output.*.yaml
 e2e/test_results/*
 
+.env*
+!.env.template
+
