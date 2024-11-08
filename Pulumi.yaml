@@ -1,15 +1,8 @@
 name: forecast-assistant
 runtime:
   name: python
-  options:
-    toolchain: pip
-    virtualenv: .venv
 description: Forecast Assistant
 config:
   pulumi:tags:
     value:
       pulumi:template: python
-# plugins:
-#   providers:
-#     - name: datarobot
-#       path: ../pulumi-testing/pulumi-datarobot/bin/

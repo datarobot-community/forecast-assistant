@@ -1,0 +1,89 @@
+msgid ""
+msgstr ""
+"PO-Revision-Date: 2024-10-25 22:04+0000\n"
+"Language: ko_KR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Repo: recipe-forecastic-reactic\n"
+
+msgid ""
+"        You are a data analyst and your job is to explain to non-technical executive business leaders what the data suggests\n"
+"        Executive leadership will provide a sales forecast and you will interpret it and summarize the outlook, highlighting key insights.\n"
+"        Your response should be only 1 sentence long, not very wordy. It should be like a news headline. Do not put quotation marks around it.\n"
+"        Your response, while insightful, should speak to the general direction of the forecast."
+msgstr ""
+"        귀하는 데이터 분석가이며, 귀하의 임무는 비기술적인 비즈니스 리더에게 데이터가 시사하는 바를 설명하는 것입니다.\n"
+"        경영진이 매출 예측을 제공하면 여러분은 이를 해석하고 주요 인사이트를 강조하여 전망을 요약해야 합니다.\n"
+"        답변은 장황하지 않고 한 문장으로만 작성해야 합니다. 뉴스 헤드라인과 비슷해야 합니다. 주위에 따옴표를 넣지 마세요.\n"
+"        답변은 인사이트를 담고 있으면서도 예측의 일반적인 방향에 대해 설명해야 합니다."
+
+msgid "**AI Generated Analysis:**"
+msgstr "**AI 생성 분석:**"
+
+msgid "Choose an option"
+msgstr "옵션을 선택하세요"
+
+msgid "Forecast:"
+msgstr "예측:"
+
+msgid "Generating explanation..."
+msgstr "설명 생성 중..."
+
+msgid "High forecast"
+msgstr "높은 예측"
+
+msgid "Important Features"
+msgstr "중요 기능"
+
+msgid "Low forecast"
+msgstr "낮은 예측"
+
+msgid "Market"
+msgstr "시장"
+
+msgid "Multistore Sales Forecast Interpreter"
+msgstr "다중 매장 판매 예측 인터프리터"
+
+msgid "No data available for the selected series. Try a different combination of filters."
+msgstr "선택한 시리즈에 사용할 수 있는 데이터가 없습니다. 다른 필터 조합을 시도해 보세요."
+
+msgid "Number of records to display"
+msgstr "표시할 레코드 수"
+
+msgid "Processing forecast..."
+msgstr "처리 예측..."
+
+msgid "Region"
+msgstr "지역"
+
+msgid "Run Forecast"
+msgstr "실행 예측"
+
+msgid "Sales ($)"
+msgstr "매출($)"
+
+msgid "Select Filters for the Forecast"
+msgstr "예측에 대한 필터 선택"
+
+msgid "Store"
+msgstr "저장소"
+
+msgid "The following are the most important exogenous features in the forecasting model's predictions of `{target}`. Provide a 3-4 sentence summary of the exogenous driver(s) for the forecast, explain any potential intuitive, qualitative interpretation(s) or explanation(s)."
+msgstr "다음은 예측 모델의 `{target}` 예측에서 가장 중요한 외생적 특징입니다. 예측의 외생적 동인에 대해 3~4문장으로 요약하고 직관적, 정성적 해석 또는 설명이 가능한 경우 설명하세요."
+
+msgid "The following are the most important features in the forecasting model's predictions. Provide a 3-4 sentence summary of the key cyclical and/or trend drivers for the forecast, explain any potential intuitive,qualitative interpretations or explanations."
+msgstr "다음은 예측 모델의 예측에서 가장 중요한 특징입니다. 예측의 주요 주기적 및/또는 추세 동인을 3~4문장으로 요약하고, 직관적, 정성적 해석 또는 설명이 가능한 경우 설명하세요."
+
+msgid "This application forecasts the sale revenue of a national retailer. The forecast can be focused by region, market, or store."
+msgstr "이 애플리케이션은 전국 소매업체의 판매 수익을 예측합니다. 예측은 지역, 시장 또는 매장별로 초점을 맞출 수 있습니다."
+
+msgid "Total {target} Forecast"
+msgstr "총 {대상} 예측"
+
+msgid "Unable to load Deployment IDs or Application Settings. If running locally, verify you have selected the correct stack and that it is active using `pulumi stack output`. If running in DataRobot, verify your runtime parameters have been set correctly."
+msgstr "배포 ID 또는 애플리케이션 설정을 로드할 수 없습니다. 로컬에서 실행하는 경우 올바른 스택을 선택했는지, '풀루미 스택 출력'을 사용하여 활성화되어 있는지 확인하세요. DataRobot에서 실행 중인 경우 런타임 매개 변수가 올바르게 설정되었는지 확인하세요."
+
+msgid "{target} History"
+msgstr "{target} 히스토리"

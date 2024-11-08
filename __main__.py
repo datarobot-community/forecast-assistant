@@ -18,6 +18,7 @@ import pulumi
 import pulumi_datarobot as datarobot
 import yaml
 
+from forecastic.i18n import LocaleSettings
 from forecastic.resources import (
     ScoringDataset,
     app_env_name,
@@ -46,6 +47,8 @@ from infra.settings_main import (
     scoring_prep_nb,
     scoring_prep_output_file,
 )
+
+LocaleSettings().setup_locale()
 
 check_feature_flags(pathlib.Path("infra/feature_flag_requirements.yaml"))
 
@@ -91,6 +94,7 @@ forecast_deployment = datarobot.Deployment(
     prediction_environment_id=prediction_environment.id,
     registered_model_version_id=model_training_output.registered_model_version_id,
     **settings_forecast_deployment.deployment_args.model_dump(),
+    use_case_ids=[model_training_output.use_case_id],
 )
 
 forecast_deployment.id.apply(
@@ -128,6 +132,9 @@ app_runtime_parameters = [
         type="string",
         value=scoring_prep_output.id,
     ),
+    datarobot.ApplicationSourceRuntimeParameterValueArgs(
+        key="APP_LOCALE", type="string", value=LocaleSettings().app_locale
+    ),
 ] + llm_credential.app_runtime_parameter_values
 
 application_source = datarobot.ApplicationSource(
@@ -139,6 +146,7 @@ application_source = datarobot.ApplicationSource(
 app = datarobot.CustomApplication(
     resource_name=settings_app_infra.app_resource_name,
     source_version_id=application_source.version_id,
+    use_case_ids=[model_training_output.use_case_id],
 )
 
 app.id.apply(settings_app_infra.ensure_app_settings)

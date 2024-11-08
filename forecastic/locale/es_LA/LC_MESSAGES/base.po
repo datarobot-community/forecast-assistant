@@ -1,0 +1,89 @@
+msgid ""
+msgstr ""
+"PO-Revision-Date: 2024-10-25 22:04+0000\n"
+"Language: es_LA\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Repo: recipe-forecastic-reactic\n"
+
+msgid ""
+"        You are a data analyst and your job is to explain to non-technical executive business leaders what the data suggests\n"
+"        Executive leadership will provide a sales forecast and you will interpret it and summarize the outlook, highlighting key insights.\n"
+"        Your response should be only 1 sentence long, not very wordy. It should be like a news headline. Do not put quotation marks around it.\n"
+"        Your response, while insightful, should speak to the general direction of the forecast."
+msgstr ""
+"        Eres un analista de datos y tu trabajo es explicar a los líderes empresariales ejecutivos no técnicos lo que sugieren los datos.\n"
+"        El liderazgo ejecutivo proporcionará un pronóstico de ventas y tú lo interpretarás y resumirás la perspectiva, destacando las ideas clave.\n"
+"        Tu respuesta debe ser de solo 1 oración, no muy prolija. Debe ser como un titular de noticias. No pongas comillas alrededor de ella.\n"
+"        Tu respuesta, aunque perspicaz, debe hablar de la dirección general del pronóstico."
+
+msgid "**AI Generated Analysis:**"
+msgstr "**Análisis Generado por IA:**"
+
+msgid "Choose an option"
+msgstr "Elija una opción"
+
+msgid "Forecast:"
+msgstr "Previsión:"
+
+msgid "Generating explanation..."
+msgstr "Generando explicación..."
+
+msgid "High forecast"
+msgstr "Alta Pronóstico"
+
+msgid "Important Features"
+msgstr "Características Importantes"
+
+msgid "Low forecast"
+msgstr "Baja Pronóstico"
+
+msgid "Market"
+msgstr "Mercado"
+
+msgid "Multistore Sales Forecast Interpreter"
+msgstr "Intérprete de Pronóstico de Ventas Multitienda"
+
+msgid "No data available for the selected series. Try a different combination of filters."
+msgstr "No hay datos disponibles para la serie seleccionada. Intenta con una combinación diferente de filtros."
+
+msgid "Number of records to display"
+msgstr "Número de registros para mostrar"
+
+msgid "Processing forecast..."
+msgstr "Procesando pronóstico..."
+
+msgid "Region"
+msgstr "Región"
+
+msgid "Run Forecast"
+msgstr "Ejecutar Forecast"
+
+msgid "Sales ($)"
+msgstr "Ventas ($)"
+
+msgid "Select Filters for the Forecast"
+msgstr "Seleccione filtros para el pronóstico"
+
+msgid "Store"
+msgstr "Almacenar"
+
+msgid "The following are the most important exogenous features in the forecasting model's predictions of `{target}`. Provide a 3-4 sentence summary of the exogenous driver(s) for the forecast, explain any potential intuitive, qualitative interpretation(s) or explanation(s)."
+msgstr "A continuación se presentan las características exógenas más importantes en las predicciones del modelo de pronóstico de `{target}`. Proporcione un resumen de 3-4 oraciones sobre el(los) impulsor(es) exógeno(s) para el pronóstico, explique cualquier interpretación o explicación potencial intuitiva y cualitativa."
+
+msgid "The following are the most important features in the forecasting model's predictions. Provide a 3-4 sentence summary of the key cyclical and/or trend drivers for the forecast, explain any potential intuitive,qualitative interpretations or explanations."
+msgstr "A continuación se presentan las características más importantes en las predicciones del modelo de pronóstico. Proporcione un resumen de 3-4 oraciones sobre los principales impulsores cíclicos y/o de tendencia para el pronóstico, explicando cualquier interpretación o explicación intuitiva y cualitativa potencial."
+
+msgid "This application forecasts the sale revenue of a national retailer. The forecast can be focused by region, market, or store."
+msgstr "Esta aplicación pronostica los ingresos por ventas de un minorista nacional. El pronóstico puede centrarse por región, mercado o tienda."
+
+msgid "Total {target} Forecast"
+msgstr "Pronóstico total de {target}"
+
+msgid "Unable to load Deployment IDs or Application Settings. If running locally, verify you have selected the correct stack and that it is active using `pulumi stack output`. If running in DataRobot, verify your runtime parameters have been set correctly."
+msgstr "No se pueden cargar los IDs de implementación o la configuración de la aplicación. Si se está ejecutando localmente, verifique que haya seleccionado la pila correcta y que esté activa usando `pulumi stack output`. Si se está ejecutando en DataRobot, verifique que sus parámetros de tiempo de ejecución se hayan configurado correctamente."
+
+msgid "{target} History"
+msgstr "Historia de {target}"

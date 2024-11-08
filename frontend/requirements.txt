@@ -4,6 +4,7 @@ datarobot-predict>=1.9.2,<1.10
 pydantic>=2.9.2,<2.10
 pydantic-settings>=2.5.2,<2.6
 
+babel>=2.16.0,<3
 openai>=1.31.2,<2
 pandas>=2.2.2,<3
 

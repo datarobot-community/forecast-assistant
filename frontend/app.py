@@ -30,6 +30,7 @@ from forecastic.api import (
     get_scoring_data,
     get_standardized_predictions,
 )
+from forecastic.i18n import gettext
 from forecastic.schema import FilterSpec
 
 CHART_CONFIG = {"displayModeBar": False, "responsive": True}
@@ -53,8 +54,8 @@ st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
 
 def clean_column_headers(df: pd.DataFrame) -> pd.DataFrame:
-    """Clean column headers for display."""
-    return df.rename(columns=lambda x: x.replace("_", " ").title())
+    """Clean column headers for display"""
+    return df.rename(columns=lambda x: gettext(x.replace("_", " ").title()))
 
 
 def fpa() -> None:
@@ -77,7 +78,7 @@ def fpa() -> None:
         st.session_state["filters"] = get_filters()
     with st.sidebar:
         with st.form(key="sidebar_form"):
-            st.subheader("Select Filters for the Forecast")
+            st.subheader(gettext("Select Filters for the Forecast"))
 
             for filter_widget in st.session_state["filters"]:
                 column_name = filter_widget.column_name
@@ -85,19 +86,20 @@ def fpa() -> None:
                     label=filter_widget.display_name,
                     options=filter_widget.valid_values,
                     key=f"filter_{column_name}",
+                    placeholder=gettext("Choose an option"),
                 )
 
-            sidebarSubmit = st.form_submit_button(label="Run Forecast")
+            sidebarSubmit = st.form_submit_button(label=gettext("Run Forecast"))
 
         n_historical_records_to_display = st.number_input(
-            "Number of records to display",
+            gettext("Number of records to display"),
             min_value=10,
             max_value=200,
             value=70,
             step=10,
         )
     if sidebarSubmit:
-        with st.spinner("Processing forecast..."):
+        with st.spinner(gettext("Processing forecast...")):
             series_selections = []
             for filter_widget in st.session_state["filters"]:
                 column_name = filter_widget.column_name
@@ -120,7 +122,7 @@ def fpa() -> None:
                 scoring_data, n_historical_records_to_display
             )
 
-        with st.spinner("Generating explanation..."):
+        with st.spinner(gettext("Generating explanation...")):
             forecast_summary = get_llm_summary(forecast_raw)
             st.session_state["headline"] = forecast_summary.headline
             st.session_state["forecast_interpretation"] = forecast_summary.summary_body
@@ -139,10 +141,10 @@ def fpa() -> None:
         )
     if "forecast_interpretation" in st.session_state:
         with explanationContainer:
-            st.subheader("**AI Generated Analysis:**")
+            st.subheader(gettext("**AI Generated Analysis:**"))
             st.write(f"**{st.session_state['headline']}**")
             st.write(st.session_state["forecast_interpretation"])
-            with st.expander("Important Features", expanded=False):
+            with st.expander(gettext("Important Features"), expanded=False):
                 st.write(st.session_state["explanations_df"])
 
 
