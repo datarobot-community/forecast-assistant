@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import List, Tuple
 
 import datarobot as dr
+import pulumi
 import pulumi_datarobot as datarobot
 
 from forecastic.i18n import LanguageCode, LocaleSettings
@@ -36,10 +37,14 @@ application_locale = LocaleSettings().app_locale
 
 
 def ensure_app_settings(app_id: str) -> None:
-    dr.client.get_client().patch(
-        f"customApplications/{app_id}/",
-        json={"allowAutoStopping": True},
-    )
+    try:
+        dr.client.get_client().patch(
+            f"customApplications/{app_id}/",
+            json={"allowAutoStopping": True},
+            timeout=60,
+        )
+    except Exception:
+        pulumi.warn("Could not enable autostopping for the Application")
 
 
 def _prep_metadata_yaml(

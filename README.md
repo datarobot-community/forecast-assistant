@@ -2,8 +2,12 @@
 
 The forecast assistant is a customizable application template for building AI-powered forecasts. In addition to creating a hosted and shareable user interface, the forecast assistant provides: 
 
-* Best-in-class predictive model training and deployment using DataRobot AutoTS.
+* Best-in-class predictive model training and deployment using DataRobot Forecasting.
 * An intelligent explanation of factors driving the forecast that are uniquely derived for any series at any time.
+
+> [!WARNING]
+> Application Templates are intended to be starting points that provide guidance on how to develop, serve, and maintain AI applications.
+> They require a developer or data scientist to adapt, and modify them to business requirements before being put into production.
 
 ![Using Forecastic](https://s3.amazonaws.com/datarobot_public/drx/recipe_gifs/launch_gifs/forecast-assistant-smallest.gif)
 
@@ -48,6 +52,15 @@ and `pulumi` invocation see [here](#setup-for-advanced-users).
 ## Architecture Overview
 ![Forecast Assistant](https://s3.amazonaws.com/datarobot_public/drx/recipe_gifs/forecasting_architecture.svg)
 
+## Why build AI Apps with DataRobot App Templates?
+
+App Templates transform your AI projects from notebooks to production-ready applications. Too often, getting models into production means rewriting code, juggling credentials, and coordinating with multiple tools & teams just to make simple changes. DataRobot's composable AI apps framework eliminates these bottlenecks, letting you spend more time experimenting with your ML and app logic and less time wrestling with plumbing and deployment.
+- Start Building in Minutes: Deploy complete AI applications instantly, then customize AI logic or frontend independently - no architectural rewrites needed.
+- Keep Working Your Way: Data scientists keep working in notebooks, developers in IDEs, and configs stay isolated - update any piece without breaking others.
+- Iterate With Confidence: Make changes locally and deploy with confidence - spend less time writing and troubleshooting plumbing, more time improving your app.
+
+Each template provides an end-to-end AI architecture, from raw inputs to deployed application, while remaining highly customizable for specific business requirements.
+
 ## Make changes
 
 ### Change the data and how the model is trained
@@ -68,7 +81,7 @@ and `pulumi` invocation see [here](#setup-for-advanced-users).
 3. Run `pulumi up` again to update your stack with the changes.
 
 #### Change the language in the frontend
-Optionally, you can set the application locale here as well. e.g. `MAIN_APP_LOCALE=es_LA`. Supported locales include Spanish (es_LA) and Japanese (ja_JP) in addition to the default language (en_US).
+Optionally, you can set the application locale here as well. e.g. `MAIN_APP_LOCALE=ja_JP`. Supported locales include Japanese (ja_JP) in addition to the default language (en_US).
 
 ## Share results
 1. Log into the DataRobot application.

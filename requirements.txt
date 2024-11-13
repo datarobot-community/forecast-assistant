@@ -7,6 +7,7 @@ datarobotx-idp>=0.2.13,<0.3
 
 pydantic>=2.9.2,<2.10
 pydantic-settings>=2.5.2,<2.6
+eval_type_backport>=0.2.0,<0.3
 
 openai>=1.31.2,<2
 
@@ -15,6 +16,7 @@ pandas>=2.0.3,<3
 babel>=2.16,<3
 
 streamlit>=1.39.0,<2
+st-theme>=1.2.3,<2
 plotly>=5.24.1,<6
 
 jupyterlab>=4.2.5,<5
