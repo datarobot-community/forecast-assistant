@@ -18,6 +18,7 @@ import sys
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+from streamlit_theme import st_theme
 
 sys.path.append("..")
 
@@ -35,7 +36,6 @@ from forecastic.schema import FilterSpec
 
 CHART_CONFIG = {"displayModeBar": False, "responsive": True}
 
-LOGO = "./DataRobot.png"
 
 sys.setrecursionlimit(10000)
 app_settings = get_app_settings()
@@ -46,6 +46,12 @@ st.set_page_config(
     layout="wide",
     page_icon="./datarobot_favicon.png",
 )
+
+LOGO = "./DataRobot_white.png"
+
+theme = st_theme()
+if theme and theme.get("base") == "light":
+    LOGO = "./DataRobot_black.png"
 
 with open("./style.css") as f:
     css = f.read()
