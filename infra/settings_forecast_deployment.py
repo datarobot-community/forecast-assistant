@@ -125,7 +125,6 @@ def ensure_batch_prediction_job(deployment_id: str, dataset_scoring_id: str) -> 
         token=client.token,
         deployment_id=deployment_id,
         batch_prediction_job=BatchPredictionJobDefinitionsCreate(
-            num_concurrent=3,
             intake_settings=Catalog(
                 type="dataset",
                 datasetId=dataset_scoring_id,
