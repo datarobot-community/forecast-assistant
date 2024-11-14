@@ -71,6 +71,10 @@ Each template provides an end-to-end AI architecture, from raw inputs to deploye
    The last cell of each notebook is required, as it writes outputs needed for the rest of the pipeline.
 2. Run the revised notebooks.
 3. Run `pulumi up` to update your stack with these changes.
+```
+source set_env.sh  # On windows use `set_env.bat`
+pulumi up
+```  
 4. For a forecasting app that is continuously updated, consider running `prep_scoring_data.ipynb` on a schedule.
 
 ### Change the front-end
@@ -78,7 +82,16 @@ Each template provides an end-to-end AI architecture, from raw inputs to deploye
 2. Streamlit assets are in `frontend/` and can be edited. After provisioning the stack
    at least once, you can also test the frontend locally using `streamlit run app.py` from the
    `frontend/` directory (don't forget to initialize your environment using `source set_env.sh`).
+```
+source set_env.sh  # On windows use `set_env.bat`
+cd frontend
+streamlit run app.py
+```
 3. Run `pulumi up` again to update your stack with the changes.
+```
+source set_env.sh  # On windows use `set_env.bat`
+pulumi up
+```
 
 #### Change the language in the frontend
 Optionally, you can set the application locale here as well. e.g. `MAIN_APP_LOCALE=ja_JP`. Supported locales include Japanese (ja_JP) in addition to the default language (en_US).
