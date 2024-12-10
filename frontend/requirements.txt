@@ -16,3 +16,5 @@ pydantic==2.9.2
 pydantic-settings==2.5.2
 
 eval-type-backport>=0.2.0,<0.3
+
+fastapi[standard]>=0.115.5,<1

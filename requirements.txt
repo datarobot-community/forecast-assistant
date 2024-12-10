@@ -1,5 +1,5 @@
 pulumi>=3.133.0,<4
-pulumi-datarobot>=0.2.5,<0.3
+pulumi-datarobot>=0.4.5,<0.5
 
 datarobot>=3.5.2,<3.6
 datarobot-predict>=1.9.2,<1.10
@@ -26,3 +26,5 @@ pytest==8.0.1
 mypy==1.11.2
 types-PyYAML==6.0.12.20240917
 ruff==0.6.9
+
+fastapi[standard]>=0.115.5,<1

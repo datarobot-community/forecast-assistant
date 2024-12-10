@@ -18,7 +18,7 @@ import json
 import subprocess
 from typing import Any, Dict, Mapping, Tuple, Type, Union
 
-from pydantic import AliasChoices, Field
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import (
     BaseSettings,
     EnvSettingsSource,
@@ -105,3 +105,19 @@ class ScoringDataset(DynamicSettings):
             scoring_dataset_env_name,
         )
     )
+
+
+class Application(DynamicSettings):
+    id: str = Field(
+        validation_alias=AliasChoices(
+            "UVICORN_ROOT_PATH",
+            app_env_name,
+        )
+    )
+
+    @field_validator("id")
+    @classmethod
+    def extract_id_from_path_if_exists(cls, value: str) -> str:
+        if "/" in value:
+            return value.split("/")[-1]
+        return value

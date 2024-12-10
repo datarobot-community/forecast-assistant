@@ -35,7 +35,7 @@ sys.path.append("..")
 
 from forecastic.credentials import AzureOpenAICredentials
 from forecastic.i18n import gettext
-from forecastic.resources import ScoringDataset, TimeSeriesDeployment
+from forecastic.resources import Application, ScoringDataset, TimeSeriesDeployment
 from forecastic.schema import (
     AppSettings,
     AppUrls,
@@ -168,7 +168,7 @@ def get_predictions(scoring_data: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
     Parameters
     ----------
-    data : list[dict]
+    scoring_data : list[dict]
         A list of dictionaries containing the input data for generating predictions.
 
     Returns
@@ -196,7 +196,7 @@ def _get_predictions_cached(scoring_data_json: str) -> pd.DataFrame:
 def get_standardized_predictions(
     scoring_data: list[dict[str, Any]],
 ) -> list[PredictionRow]:
-    """Retreive predictions and process them into a standardized format.
+    """Retrieve predictions and process them into a standardized format.
 
     Format cast is independent of the scoring data.
 
@@ -255,6 +255,60 @@ def _process_predictions(predictions: list[dict[str, Any]]) -> list[PredictionRo
         bounds = ["prediction", "low", "high"]
         clean_predictions[bounds] = clean_predictions[bounds].clip(lower=0)
     return [PredictionRow(**i) for i in clean_predictions.to_dict(orient="records")]
+
+
+def get_formatted_predictions(
+    scoring_data: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Format predictions for the frontend."""
+    predictions = get_predictions(scoring_data)
+    formatted_predictions = _format_predictions(predictions)
+
+    return formatted_predictions
+
+
+def _format_predictions(predictions: list[dict[str, Any]]) -> list[dict[Any, Any]]:
+    """Format predictions for the frontend."""
+
+    data = pd.DataFrame(predictions)
+
+    target = dr.Project.get(app_settings.project_id).target  # type: ignore[attr-defined]
+    date_id = app_settings.datetime_partition_column
+    prediction_interval = f"{app_settings.prediction_interval:.0f}"
+    percentile_prefix = f"PREDICTION_{prediction_interval}_PERCENTILE"
+
+    data["timestamp"] = data[date_id]
+    data["prediction"] = data[f"{target}_PREDICTION"]
+    data["seriesId"] = target
+    data["forecastDistance"] = data["FORECAST_DISTANCE"]
+    data["forecastPoint"] = data["FORECAST_POINT"]
+
+    data["predictionIntervals"] = data.apply(
+        lambda x: {
+            prediction_interval: {
+                "low": x[f"{percentile_prefix}_LOW"],
+                "high": x[f"{percentile_prefix}_HIGH"],
+            }
+        },
+        axis=1,
+    )
+
+    data["predictionExplanations"] = data.apply(
+        lambda x: [
+            {
+                "feature": x[f"EXPLANATION_{i}_FEATURE_NAME"],
+                "featureValue": x[f"EXPLANATION_{i}_ACTUAL_VALUE"],
+                "label": target,
+                "qualitativeStrength": x[f"EXPLANATION_{i}_QUALITATIVE_STRENGTH"],
+                "strength": x[f"EXPLANATION_{i}_STRENGTH"],
+            }
+            for i in range(1, len(x.index))
+            if f"EXPLANATION_{i}_FEATURE_NAME" in x.index
+        ],
+        axis=1,
+    )
+
+    return data.to_dict(orient="records")  # type: ignore[no-any-return]
 
 
 def get_forecast_as_plotly_json(
@@ -557,11 +611,11 @@ def _get_completion(
 def share_access(emails: List[str]) -> tuple[str, int]:
     """Share application with other users."""
     client = dr.Client()  # type: ignore[attr-defined]
-    application_name = app_settings.application_name.replace(" ", "%20")  # type: ignore[attr-defined]
-
     try:
-        url = f"customApplications/?name={application_name}"
-        application_id = client.get(url).json()["data"][0]["id"]
+        application_id = Application().id
+    except ValidationError:
+        return "Application ID not found. Have you deployed it with pulumi up?", 500
+    try:
         url = f"customApplications/{application_id}/sharedRoles"
         roles = [
             {"role": "CONSUMER", "shareRecipientType": "user", "username": email}

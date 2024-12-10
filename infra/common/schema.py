@@ -347,4 +347,3 @@ class ApplicationSourceArgs(BaseModel):
     files: Optional[Any] = None
     folder_path: Optional[str] = None
     name: Optional[str] = None
-    resource_settings: Optional[datarobot.ApplicationSourceResourceSettingsArgs] = None

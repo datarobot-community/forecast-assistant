@@ -146,13 +146,6 @@ class AppSettings(BaseModel):
         else:
             training_dataset_id = training_dataset.id
 
-        filterable_categories = static_app_settings.filterable_categories
-        page_description = static_app_settings.page_description
-        lower_bound_forecast_at_0 = static_app_settings.lower_bound_forecast_at_0
-        graph_y_axis = static_app_settings.graph_y_axis
-        page_title = static_app_settings.page_title
-        headline_prompt = static_app_settings.headline_prompt
-
         return AppSettings(
             registered_model_id=registered_model_id,
             registered_model_version_id=registered_model_version_id,
@@ -180,12 +173,12 @@ class AppSettings(BaseModel):
             datetime_partition_column_transformed=datetime_partitioning.datetime_partition_column,
             training_dataset_id=training_dataset_id,
             calendar_id=datetime_partitioning.calendar_id,
-            filterable_categories=filterable_categories,
-            page_description=page_description,
-            lower_bound_forecast_at_0=lower_bound_forecast_at_0,
-            graph_y_axis=graph_y_axis,
-            page_title=page_title,
-            headline_prompt=headline_prompt,
+            filterable_categories=static_app_settings.filterable_categories,
+            page_description=static_app_settings.page_description,
+            lower_bound_forecast_at_0=static_app_settings.lower_bound_forecast_at_0,
+            graph_y_axis=static_app_settings.graph_y_axis,
+            page_title=static_app_settings.page_title,
+            headline_prompt=static_app_settings.headline_prompt,
         )
 
     @classmethod
