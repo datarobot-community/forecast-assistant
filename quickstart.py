@@ -194,17 +194,50 @@ def setup_virtual_environment() -> None:
         raise
 
 
+def parse_quoted_value(value):
+    """Parse content between quotes, applying bash-like whitespace rules"""
+    lines = value.splitlines()
+    if not lines:
+        return ""
+
+    # If first line is empty, strip all following lines
+    if not lines[0].strip():
+        return "\n".join(line.strip() for line in lines if line.strip())
+
+    return value
+
+
 def load_dotenv():
-    env_vars = {}
     with open(".env") as f:
-        for line in f.readlines():
-            if "=" in line:
-                k, v = line.split("=", 1)
-                k = k.strip()
-                v = re.sub(r"\s?#.*", "", v).rstrip()
-                v = v.strip().strip('"')
-                os.environ[k] = v
-                env_vars[k] = v
+        content = f.read()
+
+    pattern = r"""
+        ^([^=\s][^=]*?)  # Key: no whitespace at start, no = chars
+        =\s*             # Equals with optional whitespace after
+        (?:
+            '(.*?)'      # Single quoted (group 2)
+            |"(.*?)"     # Double quoted (group 3)
+            |([^\n]+)    # Unquoted: everything until newline (group 4)
+        )
+    """
+
+    env_vars = {}
+    for match in re.finditer(pattern, content, re.MULTILINE | re.DOTALL | re.VERBOSE):
+        key = match.group(1).strip()
+
+        if match.group(2) is not None:  # Single quoted
+            value = parse_quoted_value(match.group(2))
+        elif match.group(3) is not None:  # Double quoted
+            value = match.group(3).strip()
+        else:  # Unquoted
+            value = match.group(4)
+            if " #" in value:  # Only strip comments after space
+                value = value.split(" #", 1)[0]
+            value = value.strip()
+
+        env_vars[key] = value
+
+    os.environ.update(env_vars)
     return env_vars
 
 

@@ -79,6 +79,9 @@ class AppSettings(BaseModel):
     feature_derivation_window_end: int
     forecast_window_start: int
     forecast_window_end: int
+    maximum_default_display_length: int = Field(
+        description="Maximum number of historical points to display on chart by default"
+    )
     timestep_settings: Dict[str, Any]
     datetime_partition_column: str = Field(
         description="Name of the untransformed datetime partition column in the training dataset"
@@ -165,6 +168,8 @@ class AppSettings(BaseModel):
             feature_derivation_window_end=datetime_partitioning.feature_derivation_window_end,
             forecast_window_start=datetime_partitioning.forecast_window_start,
             forecast_window_end=datetime_partitioning.forecast_window_end,
+            maximum_default_display_length=datetime_partitioning.forecast_window_end
+            * 10,
             timestep_settings=cls.get_timestamp_settings(
                 project_id,
                 datetime_partitioning_specification.datetime_partition_column,
@@ -226,3 +231,9 @@ class AppUrls(BaseModel):
     dataset: str
     model: str
     deployment: str
+
+
+class AppRuntimeAttributes(BaseModel):
+    app_urls: AppUrls
+    app_creator_email: str
+    app_latest_created_date: str

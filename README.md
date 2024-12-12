@@ -66,6 +66,7 @@ The forecast assistant is a customizable application template for building AI-po
    ```bash
    python quickstart.py YOUR_PROJECT_NAME  # Windows users may have to use `py` instead of `python`
    ```
+   Python 3.9+ is required.
 
 Advanced users who want to control virtual environment creation, dependency installation, environment variable setup
 and `pulumi` invocation, see [the advanced setup instructions](#setup-for-advanced-users).

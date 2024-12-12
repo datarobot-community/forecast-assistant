@@ -25,10 +25,12 @@ from forecastic.api import (
     get_filters,
     get_formatted_predictions,
     get_llm_summary,
+    get_runtime_attributes,
     get_scoring_data,
     share_access,
 )
 from forecastic.schema import (
+    AppRuntimeAttributes,
     AppSettings,
     FilterSpec,
     ForecastSummary,
@@ -41,6 +43,11 @@ app = FastAPI()
 @app.get("/appSettings")
 async def get_app_settings_endpoint() -> AppSettings:
     return get_app_settings()
+
+
+@app.get("/runtimeAttributes")
+async def get_runtime_attributes_endpoint() -> AppRuntimeAttributes:
+    return get_runtime_attributes()
 
 
 @app.get("/filters")

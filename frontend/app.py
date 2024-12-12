@@ -101,7 +101,7 @@ def fpa() -> None:
             gettext("Number of records to display"),
             min_value=10,
             max_value=200,
-            value=70,
+            value=min(200, app_settings.maximum_default_display_length),
             step=10,
         )
     if sidebarSubmit:

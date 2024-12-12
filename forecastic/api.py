@@ -15,17 +15,19 @@
 
 from __future__ import annotations
 
+import datetime as dt
 import functools
 import json
 import subprocess
 import sys
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Tuple
 from urllib.parse import urljoin
 
 import datarobot as dr
 import pandas as pd
 import plotly.graph_objects as go
 import yaml
+from datarobot.errors import ClientError
 from datarobot_predict.deployment import predict
 from openai import AzureOpenAI
 from plotly.subplots import make_subplots
@@ -37,6 +39,7 @@ from forecastic.credentials import AzureOpenAICredentials
 from forecastic.i18n import gettext
 from forecastic.resources import Application, ScoringDataset, TimeSeriesDeployment
 from forecastic.schema import (
+    AppRuntimeAttributes,
     AppSettings,
     AppUrls,
     FilterSpec,
@@ -89,7 +92,7 @@ def get_app_settings() -> AppSettings:
     return app_settings
 
 
-def get_app_urls() -> AppUrls:
+def _get_app_urls() -> AppUrls:
     base_url = urljoin(dr.Client().endpoint, "..")  # type: ignore[attr-defined]
     dataset_url = (
         f"usecases/{app_settings.use_case_id}/explore/dataset/{scoring_dataset_id}"
@@ -100,6 +103,37 @@ def get_app_urls() -> AppUrls:
         dataset=urljoin(base_url, dataset_url),
         model=urljoin(base_url, model_url),
         deployment=urljoin(base_url, deployment_url),
+    )
+
+
+def _get_app_metadata() -> Tuple[str, str]:
+    client = dr.Client()  # type: ignore[attr-defined]
+    try:
+        application_id = Application().id
+        url = f"customApplications/{application_id}/"
+        resp = client.get(url).json()
+        app_creator_email = resp["createdBy"]
+        # Parse "2024-12-10 15:18:53.868000" into date
+        app_latest_created_date = dt.datetime.strptime(
+            resp["updatedAt"], "%Y-%m-%d %H:%M:%S.%f"
+        ).strftime("%Y-%m-%d %H:%M:%S")
+    except (ValidationError, ClientError):
+        url = "account/info/"
+        resp = client.get(url).json()
+        app_creator_email = resp["email"]
+        app_latest_created_date = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return app_creator_email, app_latest_created_date
+
+
+def get_runtime_attributes() -> AppRuntimeAttributes:
+    """Get relevant urls and application metadata."""
+    app_urls = _get_app_urls()
+    app_creator_email, app_latest_created_date = _get_app_metadata()
+
+    return AppRuntimeAttributes(
+        app_urls=app_urls,
+        app_creator_email=app_creator_email,
+        app_latest_created_date=app_latest_created_date,
     )
 
 
@@ -540,7 +574,7 @@ def _summarize_dataframe(
     )
     prompt_completion = _get_completion(prompt_string, temperature=0)
     return (
-        prompt_df.assign(is_target_derived=ex_target).reset_index(),
+        prompt_df.assign(is_target_derived=not ex_target).reset_index(),
         prompt_completion,
     )
 

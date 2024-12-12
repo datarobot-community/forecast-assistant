@@ -5,7 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### Unreleased
+## Unreleased
+
+## [0.1.12] - 2024-12-12
+
+### Fixed
+- quickstart.py now supports multiline values correctly
+- Corrected column pointing in is_target_derived logic
+
+### Added
+- App metadata to api for creator email and created date
+
+### Changed
+- Logic for deciding default number of historical rows to render in timeseries plots
+- Add python 3.9 requirement to README
 
 ## [0.1.11] - 2024-12-09
 
