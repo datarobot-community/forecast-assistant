@@ -7,6 +7,9 @@ venv
 frontend/dynamic_app_settings.json
 frontend/metadata.yaml
 forecastic/train_model_output.*.yaml
+frontend_react/deploy/dynamic_app_settings.json
+frontend_react/deploy/metadata.yaml
+frontend_react/deploy/train_model_output.*.yaml
 notebooks/prep_scoring_data_output.*.yaml
 e2e/test_results/*
 

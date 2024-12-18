@@ -17,6 +17,7 @@ import sys
 from typing import Any, List, Optional
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 sys.path.append("..")
 
@@ -38,6 +39,14 @@ from forecastic.schema import (
 )
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/appSettings")

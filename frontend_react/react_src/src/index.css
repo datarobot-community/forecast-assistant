@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 207 16% 11%;
+    --foreground: 210 13% 75%;
+    --card: 207 12% 15%;
+    --card-forground: 207 16% 11%;
+    --border: 212 11% 27%;
+    --primary: 205 60% 51%;
+    --primary-foreground: 0 0% 100;
+    --secondary: 207.7 11.9% 21.4%;
+    --secondary-foreground: 204 12% 92%;
+    --muted: 210 12.5% 18.8%;
+    --muted-foreground: 213 9% 60%;
+    --accent: 207.7 11.9% 21.4%;
+    --accent-foreground: 204 12% 92%;
+    --destructive: 354 72% 53%;
+    --destructive-foreground: 204 12% 92%;
+    --input: 210 10% 27%;
+    --popover: 210 12.5% 18.8%;
+    --popover-foreground: 204 12% 92%;
+    --text: 204, 12%, 92%;
+    --ring: 220, 8%, 22%;
+    --radius: 0.5rem;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply m-0 bg-background text-text;
+
+    font:
+      400 14px "DM Sans",
+      sans-serif;
+  }
+}
+
+#root {
+  height: 100vh;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background: hsl(var(--muted-foreground));
+  cursor: default;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.9);
+}
+
+/* Firefox Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground)) hsl(var(--muted));
+}

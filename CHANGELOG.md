@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.1.13-experimental-react] - 2024-12-18
+
+### Added
+- Added experimental/react branch with react-based front-end including what-if analysis,
+  prediction explanations, sharing, and modern look-and-feal
+
 ## [0.1.13] - 2024-12-18
 
 ### Changed

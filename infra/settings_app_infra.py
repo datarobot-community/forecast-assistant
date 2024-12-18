@@ -26,7 +26,7 @@ from infra.common.globals import GlobalRuntimeEnvironment
 from infra.common.schema import ApplicationSourceArgs
 from infra.settings_main import project_name
 
-application_path = Path("frontend/")
+application_path = Path("frontend_react/deploy")
 
 app_source_args = ApplicationSourceArgs(
     resource_name=f"Forecast Assistant App Source [{project_name}]",
@@ -92,6 +92,7 @@ def get_app_files(
         ("forecastic/__init__.py", "forecastic/__init__.py"),
         ("forecastic/schema.py", "forecastic/schema.py"),
         ("forecastic/api.py", "forecastic/api.py"),
+        ("forecastic/rest_api.py", "forecastic/rest_api.py"),
         ("forecastic/resources.py", "forecastic/resources.py"),
         ("forecastic/credentials.py", "forecastic/credentials.py"),
         ("forecastic/i18n.py", "forecastic/i18n.py"),

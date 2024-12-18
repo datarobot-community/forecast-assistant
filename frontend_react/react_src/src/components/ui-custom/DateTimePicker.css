@@ -1,0 +1,96 @@
+.rdt {
+  @apply relative;
+}
+
+.rdtPicker {
+  table {
+    @apply w-full m-0 border-separate border-spacing-1;
+  }
+
+  td {
+    @apply h-7 text-center rounded-md;
+
+    &:not(.rdtDisabled) {
+      @apply cursor-pointer hover:bg-white/5;
+    }
+
+    &.rdtOld,
+    &.rdtNew {
+      @apply text-muted-foreground opacity-80;
+    }
+
+    &.rdtToday {
+      @apply bg-accent text-accent-foreground;
+    }
+
+    &.rdtActive {
+      @apply bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground;
+    }
+
+    &.rdtDisabled {
+      @apply text-muted-foreground opacity-50 cursor-not-allowed;
+    }
+
+    &.rdtMonth,
+    &.rdtYear {
+      @apply h-12 w-1/4 cursor-pointer;
+    }
+  }
+
+  th {
+    @apply text-center h-6;
+
+    &.dow {
+      @apply text-muted-foreground font-normal;
+    }
+
+    &.rdtSwitch {
+      @apply cursor-pointer font-normal;
+    }
+
+    &.rdtNext,
+    &.rdtPrev {
+      @apply text-xl cursor-pointer select-none;
+    }
+
+    &.rdtDisabled {
+      @apply opacity-50 cursor-not-allowed;
+    }
+  }
+}
+
+.rdtOpen {
+  .rdtPicker {
+    @apply block;
+  }
+}
+
+.rdtCounters {
+  @apply inline-block;
+}
+
+.rdtCounters > div {
+  @apply float-left;
+}
+
+.rdtCounter {
+  @apply h-24 w-10;
+
+  .rdtBtn {
+    @apply block h-2/5 leading-10 cursor-pointer select-none;
+  }
+
+  .rdtCount {
+    @apply h-1/5 text-[1.2em];
+  }
+}
+
+.rdtCounterSeparator {
+  line-height: 100px;
+}
+
+.rdtTime {
+  td {
+    @apply cursor-default;
+  }
+}
