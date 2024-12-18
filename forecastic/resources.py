@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+from pathlib import Path
 from typing import Any, Dict, Mapping, Tuple, Type, Union
 
 from pydantic import AliasChoices, Field, field_validator
@@ -121,3 +122,22 @@ class Application(DynamicSettings):
         if "/" in value:
             return value.split("/")[-1]
         return value
+
+
+def get_stack_suffix() -> str:
+    try:
+        return (
+            "."
+            + subprocess.check_output(
+                ["pulumi", "stack", "--show-name", "--non-interactive"],
+                text=True,
+                stderr=subprocess.STDOUT,
+            ).strip()
+        )
+    except Exception:
+        pass
+    return ""
+
+
+app_settings_file_name = f"train_model_output{get_stack_suffix()}.yaml"
+app_settings_path = Path("forecastic/") / app_settings_file_name

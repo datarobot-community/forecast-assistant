@@ -18,8 +18,8 @@ from __future__ import annotations
 import datetime as dt
 import functools
 import json
-import subprocess
 import sys
+from importlib import resources
 from typing import Any, List, Optional, Tuple
 from urllib.parse import urljoin
 
@@ -37,7 +37,12 @@ sys.path.append("..")
 
 from forecastic.credentials import AzureOpenAICredentials
 from forecastic.i18n import gettext
-from forecastic.resources import Application, ScoringDataset, TimeSeriesDeployment
+from forecastic.resources import (
+    Application,
+    ScoringDataset,
+    TimeSeriesDeployment,
+    app_settings_file_name,
+)
 from forecastic.schema import (
     AppRuntimeAttributes,
     AppSettings,
@@ -48,26 +53,15 @@ from forecastic.schema import (
     PredictionRow,
 )
 
-
-def get_stack_suffix() -> str:
-    try:
-        return (
-            "."
-            + subprocess.check_output(
-                ["pulumi", "stack", "--show-name", "--non-interactive"],
-                text=True,
-                stderr=subprocess.STDOUT,
-            ).strip()
-        )
-    except Exception:
-        pass
-    return ""
-
-
-app_settings_file_name = f"train_model_output{get_stack_suffix()}.yaml"
 try:
-    with open(app_settings_file_name) as f:
-        app_settings = AppSettings(**yaml.safe_load(f))
+    # Load static settings w/o making assumptions about working directory
+    app_settings = AppSettings(
+        **yaml.safe_load(
+            resources.files(__name__.split(".")[0])
+            .joinpath(app_settings_file_name)
+            .read_text()
+        )
+    )
 
     time_series_deployment_id = TimeSeriesDeployment().id
     scoring_dataset_id = ScoringDataset().id
@@ -307,13 +301,14 @@ def _format_predictions(predictions: list[dict[str, Any]]) -> list[dict[Any, Any
     data = pd.DataFrame(predictions)
 
     target = dr.Project.get(app_settings.project_id).target  # type: ignore[attr-defined]
+    multiseries_id_column = app_settings.multiseries_id_column
     date_id = app_settings.datetime_partition_column
     prediction_interval = f"{app_settings.prediction_interval:.0f}"
     percentile_prefix = f"PREDICTION_{prediction_interval}_PERCENTILE"
 
     data["timestamp"] = data[date_id]
     data["prediction"] = data[f"{target}_PREDICTION"]
-    data["seriesId"] = target
+    data["seriesId"] = data[multiseries_id_column]
     data["forecastDistance"] = data["FORECAST_DISTANCE"]
     data["forecastPoint"] = data["FORECAST_POINT"]
 
@@ -432,7 +427,6 @@ def get_forecast_as_plotly_json(
 
     fig.update_xaxes(
         color="#404040",
-        title_font_family="Gravitas One",
         title_text=datetime_partition_column,
         showgrid=False,
         linecolor="#adadad",
@@ -642,21 +636,19 @@ def _get_completion(
     return str(resp.choices[0].message.content)
 
 
-def share_access(emails: List[str]) -> tuple[str, int]:
+def share_access(emails: List[str]) -> None:
     """Share application with other users."""
     client = dr.Client()  # type: ignore[attr-defined]
     try:
         application_id = Application().id
-    except ValidationError:
-        return "Application ID not found. Have you deployed it with pulumi up?", 500
-    try:
-        url = f"customApplications/{application_id}/sharedRoles"
-        roles = [
-            {"role": "CONSUMER", "shareRecipientType": "user", "username": email}
-            for email in emails
-        ]
-        payload = {"operation": "updateRoles", "roles": roles}
-        client.patch(url, json=payload)
-        return "Success", 200
-    except Exception as e:
-        return str(e), 500
+    except ValidationError as e:
+        raise ValidationError(
+            "Application ID not found. Have you deployed it with pulumi up?"
+        ) from e
+    url = f"customApplications/{application_id}/sharedRoles"
+    roles = [
+        {"role": "CONSUMER", "shareRecipientType": "user", "username": email}
+        for email in emails
+    ]
+    payload = {"operation": "updateRoles", "roles": roles}
+    client.patch(url, json=payload)

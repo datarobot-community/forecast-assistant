@@ -77,5 +77,5 @@ async def get_llm_summary_endpoint(
 
 
 @app.patch("/share")
-async def share_endpoint(emails: List[str]) -> tuple[str, int]:
-    return share_access(emails)
+async def share_endpoint(emails: List[str]) -> None:
+    share_access(emails)

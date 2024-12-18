@@ -21,6 +21,7 @@ import pulumi
 import pulumi_datarobot as datarobot
 
 from forecastic.i18n import LanguageCode, LocaleSettings
+from forecastic.resources import app_settings_path
 from infra.common.globals import GlobalRuntimeEnvironment
 from infra.common.schema import ApplicationSourceArgs
 from infra.settings_main import project_name
@@ -95,8 +96,8 @@ def get_app_files(
         ("forecastic/credentials.py", "forecastic/credentials.py"),
         ("forecastic/i18n.py", "forecastic/i18n.py"),
         (
-            f"frontend/train_model_output.{project_name}.yaml",
-            "train_model_output.yaml",
+            str(app_settings_path),
+            str(app_settings_path).replace(f".{project_name}", ""),
         ),
     ]
 

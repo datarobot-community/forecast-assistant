@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.1.13] - 2024-12-18
+
+### Changed
+- App backend no longer depends on the current working dir to read yaml settings
+- Default scoring data is a 6 month period
+
+### Fixed
+- Removed duplicative plotting call from streamlit frontend
+- Minor formatting issue in streamlit date picker font
+- quickstart now asks you to change the default project name
+- quickstart now prints the application URL
+- quickstart.py now supports multiline values correctly, even with multiple comments
+
 ## [0.1.12] - 2024-12-12
 
 ### Fixed

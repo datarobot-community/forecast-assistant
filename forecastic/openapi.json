@@ -1,0 +1,494 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "FastAPI", "version": "0.1.0" },
+  "paths": {
+    "/appSettings": {
+      "get": {
+        "summary": "Get App Settings Endpoint",
+        "operationId": "get_app_settings_endpoint_appSettings_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AppSettings" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/runtimeAttributes": {
+      "get": {
+        "summary": "Get Runtime Attributes Endpoint",
+        "operationId": "get_runtime_attributes_endpoint_runtimeAttributes_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppRuntimeAttributes"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/filters": {
+      "get": {
+        "summary": "Get Filters Endpoint",
+        "operationId": "get_filters_endpoint_filters_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/MultiSelectFilter" },
+                  "type": "array",
+                  "title": "Response Get Filters Endpoint Filters Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/scoringData": {
+      "get": {
+        "summary": "Get Scoring Data Endpoint",
+        "operationId": "get_scoring_data_endpoint_scoringData_get",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "items": { "$ref": "#/components/schemas/FilterSpec" },
+                    "type": "array"
+                  },
+                  { "type": "null" }
+                ],
+                "title": "Filter Selection"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "type": "object" },
+                  "type": "array",
+                  "title": "Response Get Scoring Data Endpoint Scoringdata Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/predictions": {
+      "post": {
+        "summary": "Get Predictions Endpoint",
+        "operationId": "get_predictions_endpoint_predictions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": { "type": "object" },
+                "type": "array",
+                "title": "Scoring Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "type": "object" },
+                  "type": "array",
+                  "title": "Response Get Predictions Endpoint Predictions Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/llmSummary": {
+      "post": {
+        "summary": "Get Llm Summary Endpoint",
+        "operationId": "get_llm_summary_endpoint_llmSummary_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": { "type": "object" },
+                "type": "array",
+                "title": "Predictions"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ForecastSummary" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/share": {
+      "patch": {
+        "summary": "Share Endpoint",
+        "operationId": "share_endpoint_share_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": { "type": "string" },
+                "type": "array",
+                "title": "Emails"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AppRuntimeAttributes": {
+        "properties": {
+          "app_urls": { "$ref": "#/components/schemas/AppUrls" },
+          "app_creator_email": {
+            "type": "string",
+            "title": "App Creator Email"
+          },
+          "app_latest_created_date": {
+            "type": "string",
+            "title": "App Latest Created Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "app_urls",
+          "app_creator_email",
+          "app_latest_created_date"
+        ],
+        "title": "AppRuntimeAttributes"
+      },
+      "AppSettings": {
+        "properties": {
+          "registered_model_id": {
+            "type": "string",
+            "title": "Registered Model Id",
+            "description": "ID of the AutoTS registered model to be deployed for forecasting"
+          },
+          "registered_model_version_id": {
+            "type": "string",
+            "title": "Registered Model Version Id",
+            "description": "ID of the AutoTS registered model version to be deployed for forecasting"
+          },
+          "what_if_features": {
+            "items": { "$ref": "#/components/schemas/WhatIfFeature" },
+            "type": "array",
+            "title": "What If Features",
+            "description": "Features that may be of interest for what if analysis in the front end"
+          },
+          "important_features": {
+            "items": { "type": "object" },
+            "type": "array",
+            "title": "Important Features",
+            "description": "List of most important features exposed to the front end for rendering"
+          },
+          "prediction_interval": {
+            "type": "integer",
+            "title": "Prediction Interval",
+            "description": "Prediction interval for upper and lower bound of forecast"
+          },
+          "use_case_id": { "type": "string", "title": "Use Case Id" },
+          "project_id": { "type": "string", "title": "Project Id" },
+          "model_id": { "type": "string", "title": "Model Id" },
+          "model_name": { "type": "string", "title": "Model Name" },
+          "date_format": { "type": "string", "title": "Date Format" },
+          "target": {
+            "type": "string",
+            "title": "Target",
+            "description": "Name of the untransformed target column in the training dataset"
+          },
+          "multiseries_id_column": {
+            "type": "string",
+            "title": "Multiseries Id Column"
+          },
+          "feature_derivation_window_start": {
+            "type": "integer",
+            "title": "Feature Derivation Window Start"
+          },
+          "feature_derivation_window_end": {
+            "type": "integer",
+            "title": "Feature Derivation Window End"
+          },
+          "forecast_window_start": {
+            "type": "integer",
+            "title": "Forecast Window Start"
+          },
+          "forecast_window_end": {
+            "type": "integer",
+            "title": "Forecast Window End"
+          },
+          "maximum_default_display_length": {
+            "type": "integer",
+            "title": "Maximum Default Display Length",
+            "description": "Maximum number of historical points to display on chart by default"
+          },
+          "timestep_settings": {
+            "type": "object",
+            "title": "Timestep Settings"
+          },
+          "datetime_partition_column": {
+            "type": "string",
+            "title": "Datetime Partition Column",
+            "description": "Name of the untransformed datetime partition column in the training dataset"
+          },
+          "datetime_partition_column_transformed": {
+            "type": "string",
+            "title": "Datetime Partition Column Transformed",
+            "description": "Name of the DataRobot renamed datetime partition column"
+          },
+          "training_dataset_id": {
+            "type": "string",
+            "title": "Training Dataset Id"
+          },
+          "calendar_id": { "type": "string", "title": "Calendar Id" },
+          "filterable_categories": {
+            "items": { "$ref": "#/components/schemas/CategoryFilter" },
+            "type": "array",
+            "title": "Filterable Categories",
+            "description": "List of filterable categories"
+          },
+          "page_description": { "type": "string", "title": "Page Description" },
+          "lower_bound_forecast_at_0": {
+            "type": "boolean",
+            "title": "Lower Bound Forecast At 0"
+          },
+          "graph_y_axis": { "type": "string", "title": "Graph Y Axis" },
+          "page_title": { "type": "string", "title": "Page Title" },
+          "headline_prompt": { "type": "string", "title": "Headline Prompt" }
+        },
+        "type": "object",
+        "required": [
+          "registered_model_id",
+          "registered_model_version_id",
+          "what_if_features",
+          "important_features",
+          "prediction_interval",
+          "use_case_id",
+          "project_id",
+          "model_id",
+          "model_name",
+          "date_format",
+          "target",
+          "multiseries_id_column",
+          "feature_derivation_window_start",
+          "feature_derivation_window_end",
+          "forecast_window_start",
+          "forecast_window_end",
+          "maximum_default_display_length",
+          "timestep_settings",
+          "datetime_partition_column",
+          "datetime_partition_column_transformed",
+          "training_dataset_id",
+          "calendar_id",
+          "filterable_categories",
+          "page_description",
+          "lower_bound_forecast_at_0",
+          "graph_y_axis",
+          "page_title",
+          "headline_prompt"
+        ],
+        "title": "AppSettings",
+        "description": "Dynamic, data science settings needed by the application."
+      },
+      "AppUrls": {
+        "properties": {
+          "dataset": { "type": "string", "title": "Dataset" },
+          "model": { "type": "string", "title": "Model" },
+          "deployment": { "type": "string", "title": "Deployment" }
+        },
+        "type": "object",
+        "required": ["dataset", "model", "deployment"],
+        "title": "AppUrls"
+      },
+      "CategoryFilter": {
+        "properties": {
+          "column_name": { "type": "string", "title": "Column Name" },
+          "display_name": { "type": "string", "title": "Display Name" }
+        },
+        "type": "object",
+        "required": ["column_name", "display_name"],
+        "title": "CategoryFilter"
+      },
+      "ExplanationRow": {
+        "properties": {
+          "feature_name": { "type": "string", "title": "Feature Name" },
+          "relative_importance": {
+            "type": "number",
+            "title": "Relative Importance"
+          },
+          "is_target_derived": {
+            "type": "boolean",
+            "title": "Is Target Derived"
+          }
+        },
+        "type": "object",
+        "required": [
+          "feature_name",
+          "relative_importance",
+          "is_target_derived"
+        ],
+        "title": "ExplanationRow"
+      },
+      "FilterSpec": {
+        "properties": {
+          "column": { "type": "string", "title": "Column" },
+          "selected_values": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Selected Values"
+          }
+        },
+        "type": "object",
+        "required": ["column", "selected_values"],
+        "title": "FilterSpec"
+      },
+      "ForecastSummary": {
+        "properties": {
+          "headline": { "type": "string", "title": "Headline" },
+          "summary_body": { "type": "string", "title": "Summary Body" },
+          "feature_explanations": {
+            "items": { "$ref": "#/components/schemas/ExplanationRow" },
+            "type": "array",
+            "title": "Feature Explanations"
+          }
+        },
+        "type": "object",
+        "required": ["headline", "summary_body", "feature_explanations"],
+        "title": "ForecastSummary"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": { "$ref": "#/components/schemas/ValidationError" },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "MultiSelectFilter": {
+        "properties": {
+          "column_name": { "type": "string", "title": "Column Name" },
+          "display_name": { "type": "string", "title": "Display Name" },
+          "valid_values": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Valid Values"
+          }
+        },
+        "type": "object",
+        "required": ["column_name", "display_name", "valid_values"],
+        "title": "MultiSelectFilter"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": { "anyOf": [{ "type": "string" }, { "type": "integer" }] },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": { "type": "string", "title": "Message" },
+          "type": { "type": "string", "title": "Error Type" }
+        },
+        "type": "object",
+        "required": ["loc", "msg", "type"],
+        "title": "ValidationError"
+      },
+      "WhatIfFeature": {
+        "properties": {
+          "feature_name": { "type": "string", "title": "Feature Name" },
+          "known_in_advance": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "title": "Known In Advance"
+          },
+          "do_not_derive": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "title": "Do Not Derive"
+          },
+          "values": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": ["feature_name"],
+        "title": "WhatIfFeature"
+      }
+    }
+  }
+}

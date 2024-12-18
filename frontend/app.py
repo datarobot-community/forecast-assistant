@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import sys
 
 import pandas as pd
@@ -139,11 +138,10 @@ def fpa() -> None:
             )
 
     if "chart_json" in st.session_state:
-        chart = get_forecast_as_plotly_json(
-            st.session_state.scoring_data, n_historical_records_to_display
-        )
         chartContainer.plotly_chart(
-            go.Figure(chart), config=CHART_CONFIG, use_container_width=True
+            go.Figure(st.session_state["chart_json"]),
+            config=CHART_CONFIG,
+            use_container_width=True,
         )
     if "forecast_interpretation" in st.session_state:
         with explanationContainer:

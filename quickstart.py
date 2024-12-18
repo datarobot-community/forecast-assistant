@@ -14,6 +14,7 @@
 
 # type: ignore
 import argparse
+import json
 import os
 import re
 import shutil
@@ -194,25 +195,14 @@ def setup_virtual_environment() -> None:
         raise
 
 
-def parse_quoted_value(value):
-    """Parse content between quotes, applying bash-like whitespace rules"""
-    lines = value.splitlines()
-    if not lines:
-        return ""
-
-    # If first line is empty, strip all following lines
-    if not lines[0].strip():
-        return "\n".join(line.strip() for line in lines if line.strip())
-
-    return value
-
-
 def load_dotenv():
     with open(".env") as f:
         content = f.read()
 
     pattern = r"""
-        ^([^=\s][^=]*?)  # Key: no whitespace at start, no = chars
+        (?:^|\n)         # Must start at beginning of string or after newline
+        (?![\s#])        # Negative lookahead: next char cannot be whitespace or #
+        ([A-Za-z_]\w*)   # Key: start with letter/underscore, then word chars
         =\s*             # Equals with optional whitespace after
         (?:
             '(.*?)'      # Single quoted (group 2)
@@ -226,7 +216,7 @@ def load_dotenv():
         key = match.group(1).strip()
 
         if match.group(2) is not None:  # Single quoted
-            value = parse_quoted_value(match.group(2))
+            value = match.group(2).strip()
         elif match.group(3) is not None:  # Double quoted
             value = match.group(3).strip()
         else:  # Unquoted
@@ -261,8 +251,26 @@ def setup_pulumi_config(work_dir: Path, stack_name: str, env_vars: dict):
     run_pulumi_command(stack_select, work_dir, env_vars)
 
 
+def print_app_url():
+    try:
+        pulumi_output = subprocess.check_output(["pulumi", "stack", "output", "-j"])
+        pulumi_output_dict = json.loads(pulumi_output)
+        application_id = pulumi_output_dict["DATAROBOT_APPLICATION_ID"]
+        datarobot_endpoint = os.environ["DATAROBOT_ENDPOINT"]
+        url = f"{datarobot_endpoint.rstrip('/').replace('api/v2', '')}custom_applications/{application_id}/"
+        print("\n\n")
+        print("=" * 80)
+        print(f"\n    Your app is ready! Application URL:\n\n    {url}\n")
+        print("=" * 80)
+    except Exception as e:
+        print(e)
+
+
 def main():
     args = parse_args()
+    if args.stack_name == "YOUR_PROJECT_NAME":
+        print("Please use a different project name")
+        sys.exit(0)
     check_dotenv_exists()
     # Load environment variables
     env_vars = load_dotenv()
@@ -291,6 +299,8 @@ def main():
         print("\nCreate/update stack...")
         run_pulumi_command(["pulumi", "up", "--yes"], work_dir, env_vars)
         print("Stack update complete")
+
+        print_app_url()
 
 
 if __name__ == "__main__":
