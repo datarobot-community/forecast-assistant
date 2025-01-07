@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.1.14] - 2025-01-06
+
+### Added
+- Update safe_dump to support unicode
+
 ## [0.1.13] - 2024-12-18
 
 ### Changed
