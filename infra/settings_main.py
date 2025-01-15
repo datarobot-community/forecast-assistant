@@ -39,9 +39,12 @@ use_case_args = UseCaseArgs(
     description="Use case for Forecast Assistant application",
 )
 
-model_training_nb = Path("notebooks/train_model.ipynb")
-model_training_output_file = Path(f"forecastic/train_model_output.{project_name}.yaml")
-scoring_prep_nb = Path("notebooks/prep_scoring_data.ipynb")
-scoring_prep_output_file = Path(
-    f"notebooks/prep_scoring_data_output.{project_name}.yaml"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.absolute()
+
+model_training_nb = PROJECT_ROOT / "notebooks" / "train_model.ipynb"
+model_training_output_name = f"train_model_output.{project_name}.yaml"
+model_training_output_file = PROJECT_ROOT / "forecastic" / model_training_output_name
+scoring_prep_nb = PROJECT_ROOT / "notebooks" / "prep_scoring_data.ipynb"
+scoring_prep_output_file = (
+    PROJECT_ROOT / "notebooks" / f"prep_scoring_data_output.{project_name}.yaml"
 )

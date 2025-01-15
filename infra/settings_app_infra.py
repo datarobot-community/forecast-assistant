@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import textwrap
-from pathlib import Path
 from typing import List, Tuple
 
 import datarobot as dr
@@ -21,12 +20,16 @@ import pulumi
 import pulumi_datarobot as datarobot
 
 from forecastic.i18n import LanguageCode, LocaleSettings
-from forecastic.resources import app_settings_path
 from infra.common.globals import GlobalRuntimeEnvironment
 from infra.common.schema import ApplicationSourceArgs
-from infra.settings_main import project_name
+from infra.settings_main import (
+    PROJECT_ROOT,
+    model_training_output_file,
+    model_training_output_name,
+    project_name,
+)
 
-application_path = Path("frontend/")
+application_path = PROJECT_ROOT / "frontend"
 
 app_source_args = ApplicationSourceArgs(
     resource_name=f"Forecast Assistant App Source [{project_name}]",
@@ -82,6 +85,8 @@ def get_app_files(
 ) -> List[Tuple[str, str]]:
     _prep_metadata_yaml(runtime_parameter_values)
 
+    forecastic_path = PROJECT_ROOT / "forecastic"
+
     source_files = [
         (str(f), str(f.relative_to(application_path)))
         for f in application_path.glob("**/*")
@@ -89,22 +94,28 @@ def get_app_files(
         and f.name != "metadata.yaml.jinja"
         and "train_model_output" not in f.name
     ] + [
-        ("forecastic/__init__.py", "forecastic/__init__.py"),
-        ("forecastic/schema.py", "forecastic/schema.py"),
-        ("forecastic/api.py", "forecastic/api.py"),
-        ("forecastic/resources.py", "forecastic/resources.py"),
-        ("forecastic/credentials.py", "forecastic/credentials.py"),
-        ("forecastic/i18n.py", "forecastic/i18n.py"),
+        (str(forecastic_path / "__init__.py"), "forecastic/__init__.py"),
+        (str(forecastic_path / "schema.py"), "forecastic/schema.py"),
+        (str(forecastic_path / "api.py"), "forecastic/api.py"),
+        (str(forecastic_path / "resources.py"), "forecastic/resources.py"),
+        (str(forecastic_path / "credentials.py"), "forecastic/credentials.py"),
+        (str(forecastic_path / "i18n.py"), "forecastic/i18n.py"),
         (
-            str(app_settings_path),
-            str(app_settings_path).replace(f".{project_name}", ""),
+            str(model_training_output_file),
+            f"forecastic/{model_training_output_name}".replace(f".{project_name}", ""),
         ),
     ]
 
     if application_locale != LanguageCode.EN:
         source_files.append(
             (
-                f"forecastic/locale/{application_locale}/LC_MESSAGES/base.mo",
+                str(
+                    forecastic_path
+                    / "locale"
+                    / application_locale
+                    / "LC_MESSAGES"
+                    / "base.mo"
+                ),
                 f"forecastic/locale/{application_locale}/LC_MESSAGES/base.mo",
             )
         )

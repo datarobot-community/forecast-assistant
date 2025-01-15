@@ -1,6 +1,7 @@
 name: forecast-assistant
 runtime:
   name: python
+main: infra
 description: Forecast Assistant
 config:
   pulumi:tags:

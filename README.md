@@ -89,8 +89,8 @@ custom AI logic and a fully custom front-end or utilize DataRobot's off-the-shel
   ```
 - **Operational logic**: Necessary to turn on all DataRobot assets.
   ```
-  __main__.py  # Pulumi program for configuring DataRobot to serve and monitor AI & App logic
-  infra/  # Settings for resources and assets created in DataRobot
+  infra/  # Settings for resources and assets to be created in DataRobot
+  infra/__main__.py  # Pulumi program for configuring DataRobot to serve and monitor AI and App logic
   ```
 
 

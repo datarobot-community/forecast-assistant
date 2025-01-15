@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import json
 import subprocess
-from pathlib import Path
 from typing import Any, Dict, Mapping, Tuple, Type, Union
 
 from pydantic import AliasChoices, Field, field_validator
@@ -140,4 +139,3 @@ def get_stack_suffix() -> str:
 
 
 app_settings_file_name = f"train_model_output{get_stack_suffix()}.yaml"
-app_settings_path = Path("forecastic/") / app_settings_file_name

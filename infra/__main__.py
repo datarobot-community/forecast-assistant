@@ -13,16 +13,18 @@
 # limitations under the License.
 
 import pathlib
+import sys
 
 import pulumi
 import pulumi_datarobot as datarobot
 import yaml
 
+sys.path.append("..")
+
 from forecastic.i18n import LocaleSettings
 from forecastic.resources import (
     ScoringDataset,
     app_env_name,
-    app_settings_path,
     scoring_dataset_env_name,
     time_series_deployment_env_name,
 )
@@ -44,20 +46,23 @@ from infra.settings_forecast_deployment import (
 from infra.settings_llm_credential import credential, credential_args
 from infra.settings_main import (
     model_training_nb,
+    model_training_output_file,
     scoring_prep_nb,
     scoring_prep_output_file,
 )
 
 LocaleSettings().setup_locale()
 
-check_feature_flags(pathlib.Path("infra/feature_flag_requirements.yaml"))
+check_feature_flags(pathlib.Path("feature_flag_requirements.yaml"))
 
-if not app_settings_path.exists():
+if not model_training_output_file.exists():
     pulumi.info("Executing model training notebook...")
     run_notebook(model_training_nb)
 else:
-    pulumi.info(f"Using existing model training outputs in '{app_settings_path}'")
-with open(app_settings_path) as f:
+    pulumi.info(
+        f"Using existing model training outputs in '{model_training_output_file}'"
+    )
+with open(model_training_output_file) as f:
     model_training_output = AppSettings(**yaml.safe_load(f))
 
 

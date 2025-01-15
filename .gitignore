@@ -4,6 +4,7 @@ venv
 .venv
 .env
 .DS_Store
+.vscode/
 frontend/dynamic_app_settings.json
 frontend/metadata.yaml
 forecastic/train_model_output.*.yaml
@@ -12,4 +13,4 @@ e2e/test_results/*
 
 .env*
 !.env.template
-
+Pulumi.*.yaml
