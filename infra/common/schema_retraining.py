@@ -14,7 +14,7 @@
 
 
 from enum import Enum
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from openai import BaseModel
 from pydantic import Field
@@ -100,68 +100,47 @@ class AutopilotMode(str, Enum):
 
 
 class AutopilotOptions(BaseModel):
-    blendBestModels: bool = True
+    blend_best_models: bool = True
     mode: AutopilotMode = AutopilotMode.quick
-    runLeakageRemovedFeatureList: bool = True
-    scoringCodeOnly: bool = False
-    shapOnlyMode: bool = False
+    run_leakage_removed_feature_list: bool = True
+    scoring_code_only: bool = False
+    shap_only_mode: bool = False
 
 
 class Periodicity(BaseModel):
-    timeSteps: int = 0
-    timeUnit: str = "MILLISECOND"
+    time_steps: int = 0
+    time_unit: str = "MILLISECOND"
 
 
 class Schedule(BaseModel):
-    dayOfMonth: List[Any] = ["*"]
-    dayOfWeek: List[Any] = ["*"]
-    hour: List[Any] = ["*"]
-    minute: List[Any] = ["*"]
-    month: List[Any] = ["*"]
+    day_of_months: List[str] = ["*"]
+    day_of_weeks: List[str] = ["*"]
+    hours: List[str] = ["*"]
+    minutes: List[str] = ["*"]
+    months: List[str] = ["*"]
 
 
 class Trigger(BaseModel):
-    minIntervalBetweenRuns: Optional[str] = None
+    min_interval_between_runs: Optional[str] = None
     schedule: Schedule = Field(default_factory=Schedule)
-    statusDeclinesToFailing: bool = True
-    statusDeclinesToWarning: bool = True
-    statusStillInDecline: Optional[bool] = True
+    status_declines_to_failing: bool = True
+    status_declines_to_warning: bool = True
+    status_still_in_decline: Optional[bool] = True
     type: TriggerType = TriggerType.schedule
 
 
 class ProjectOptions(BaseModel):
-    cvMethod: CVMethod = CVMethod.RandomCV
-    holdoutPct: Optional[float] = None
+    cv_method: CVMethod = CVMethod.RandomCV
+    holdout_pct: Optional[float] = None
     metric: Metric = Metric.Accuracy
     reps: Optional[int] = None
-    validationPct: Optional[float] = None
-    validationType: ValidationType = ValidationType.CV
+    validation_pct: Optional[float] = None
+    validation_type: ValidationType = ValidationType.CV
 
 
 class TimeSeriesOptions(BaseModel):
-    calendarId: Optional[str] = None
-    differencingMethod: str = "auto"
-    exponentiallyWeightedMovingAlpha: Optional[int] = None
+    calendar_id: Optional[str] = None
+    differencing_method: str = "auto"
+    exponentially_weighted_moving_alpha: Optional[int] = None
     periodicities: Optional[List[Periodicity]] = None
-    treatAsExponential: Optional[str] = "auto"
-
-
-class RetrainingPolicyCreate(BaseModel):
-    action: Optional[Action] = Field(default_factory=lambda: Action.CreateChallenger)
-    autopilotOptions: Optional[AutopilotOptions] = Field(
-        default_factory=AutopilotOptions
-    )
-    description: str = Field(..., max_length=10000)
-    featureListStrategy: Optional[FeatureListStrategy] = Field(
-        default_factory=lambda: FeatureListStrategy.InformativeFeatures
-    )
-    modelSelectionStrategy: Optional[ModelSelectionStrategy] = Field(
-        default_factory=lambda: ModelSelectionStrategy.AutopilotRecommended
-    )
-    name: str = Field(..., max_length=512)
-    projectOptions: Optional[ProjectOptions] = Field(default_factory=ProjectOptions)
-    projectOptionsStrategy: Optional[ProjectOptionsStrategy] = Field(
-        default_factory=lambda: ProjectOptionsStrategy.SameAsChampion
-    )
-    timeSeriesOptions: Optional[TimeSeriesOptions] = None
-    trigger: Optional[Trigger] = Field(default_factory=Trigger)
+    treat_as_exponential: Optional[str] = "auto"

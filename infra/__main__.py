@@ -39,9 +39,7 @@ from infra.common.papermill import run_notebook
 from infra.common.urls import get_deployment_url
 from infra.components.dr_credential import DRCredential
 from infra.settings_forecast_deployment import (
-    ensure_batch_prediction_job,
-    ensure_retraining_policy,
-    update_dynamic_deployment_settings,
+    get_deployment_args,
 )
 from infra.settings_llm_credential import credential, credential_args
 from infra.settings_main import (
@@ -74,7 +72,8 @@ else:
         f"Using existing scoring data prep outputs in '{scoring_prep_output_file}'"
     )
 with open(scoring_prep_output_file) as f:
-    scoring_prep_output = ScoringDataset(**yaml.safe_load(f))
+    scoring_dataset_id = yaml.safe_load(f)["id"]
+    scoring_prep_output = ScoringDataset.model_construct(id=scoring_dataset_id)
 
 
 if settings_main.default_prediction_server_id is None:
@@ -87,35 +86,35 @@ else:
         settings_main.default_prediction_server_id,
     )
 
-update_dynamic_deployment_settings(
-    settings_forecast_deployment.deployment_args,
+deployment_args = get_deployment_args(
     datetime_partition_column=model_training_output.datetime_partition_column_transformed,
     date_format=model_training_output.date_format,
     prediction_interval=model_training_output.prediction_interval,
 )
+
 forecast_deployment = datarobot.Deployment(
     prediction_environment_id=prediction_environment.id,
     registered_model_version_id=model_training_output.registered_model_version_id,
-    **settings_forecast_deployment.deployment_args.model_dump(),
+    **deployment_args.model_dump(),
     use_case_ids=[model_training_output.use_case_id],
 )
 
-forecast_deployment.id.apply(
-    func=lambda deployment_id: ensure_batch_prediction_job(
-        deployment_id=deployment_id, dataset_scoring_id=scoring_prep_output.id
-    )
+batch_prediciton_job = datarobot.BatchPredictionJobDefinition(
+    resource_name=settings_forecast_deployment.batch_prediction_job_name,
+    enabled=True,
+    deployment_id=forecast_deployment.id,
+    intake_settings=datarobot.BatchPredictionJobDefinitionIntakeSettingsArgs(
+        type="dataset", dataset_id=scoring_dataset_id
+    ),
+    output_settings=datarobot.BatchPredictionJobDefinitionOutputSettingsArgs(
+        type="localFile"
+    ),
+    schedule=settings_forecast_deployment.batch_prediction_job_schedule,
 )
 
-
-pulumi.Output.all(
+retraining_policy = datarobot.DeploymentRetrainingPolicy(
     deployment_id=forecast_deployment.id,
-    prediction_environment_id=prediction_environment.id,
-).apply(
-    lambda kwargs: ensure_retraining_policy(
-        calendar_id=model_training_output.calendar_id,
-        training_dataset_id=scoring_prep_output.id,
-        **kwargs,
-    )
+    **settings_forecast_deployment.retraining_policy_settings.model_dump(),
 )
 
 llm_credential = DRCredential(
@@ -150,15 +149,14 @@ app = datarobot.CustomApplication(
     resource_name=settings_app_infra.app_resource_name,
     source_version_id=application_source.version_id,
     use_case_ids=[model_training_output.use_case_id],
+    allow_auto_stopping=True,
 )
-
-app.id.apply(settings_app_infra.ensure_app_settings)
 
 
 pulumi.export(time_series_deployment_env_name, forecast_deployment.id)
 pulumi.export(scoring_dataset_env_name, scoring_prep_output.id)
 pulumi.export(
-    settings_forecast_deployment.deployment_args.resource_name,
+    deployment_args.resource_name,
     forecast_deployment.id.apply(get_deployment_url),
 )
 pulumi.export(app_env_name, app.id)

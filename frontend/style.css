@@ -36,3 +36,8 @@ header {
 textarea {
     background-color: #2A3036;
 }
+
+/* Remove rounded corners from DataRobot logo */
+.st-key-datarobot-logo img {
+    border-radius: 0;
+}

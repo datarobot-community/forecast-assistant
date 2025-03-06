@@ -24,6 +24,12 @@ from datarobot.enums import VectorDatabaseChunkingMethod, VectorDatabaseEmbeddin
 from pydantic import BaseModel, ConfigDict, Field
 
 from forecastic.schema import FeatureSettingConfig
+from infra.common.schema_retraining import (
+    AutopilotOptions,
+    ProjectOptions,
+    TimeSeriesOptions,
+    Trigger,
+)
 
 from .globals import (
     GlobalGuardrailTemplateName,
@@ -347,3 +353,19 @@ class ApplicationSourceArgs(BaseModel):
     files: Optional[Any] = None
     folder_path: Optional[str] = None
     name: Optional[str] = None
+
+
+class DeploymentRetrainingPolicyArgs(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
+    resource_name: str
+    action: str | None = None
+    autopilot_options: AutopilotOptions | None = None
+    description: str | None = None
+    feature_list_strategy: str | None = None
+    model_selection_strategy: str | None = None
+    name: str | None = None
+    project_options: ProjectOptions | None = None
+    project_options_strategy: str | None = None
+    time_series_options: TimeSeriesOptions | None = None
+    trigger: Trigger | None = None

@@ -46,12 +46,6 @@ st.set_page_config(
     page_icon="./datarobot_favicon.png",
 )
 
-LOGO = "./DataRobot_white.png"
-
-theme = st_theme()
-if theme and theme.get("base") == "light":
-    LOGO = "./DataRobot_black.png"
-
 with open("./style.css") as f:
     css = f.read()
 
@@ -63,21 +57,29 @@ def clean_column_headers(df: pd.DataFrame) -> pd.DataFrame:
     return df.rename(columns=lambda x: gettext(x.replace("_", " ").title()))
 
 
-def fpa() -> None:
-    titleContainer = st.container()
-    chartContainer = st.container()
-    explanationContainer = st.container()
+def set_title() -> None:
+    """Set the title of the page"""
 
-    with titleContainer:
-        (
-            col1,
-            _,
-        ) = titleContainer.columns([1, 2])
-        col1.image(LOGO, width=200)
+    with st.container(key="datarobot-logo"):
+        col1, _ = st.columns([1, 2])
+        theme = st_theme()
+        logo = '<svg width="133" height="20" xmlns="http://www.w3.org/2000/svg" id="datarobot-logo"></svg>'
+        if theme:
+            if theme.get("base") == "light":
+                logo = "./DataRobot_black.svg"
+            else:
+                logo = "./DataRobot_white.svg"
+        col1.image(logo, width=200)
         st.markdown(
             f"<h1 style='text-align: center;'>{app_settings.page_title}</h1>",
             unsafe_allow_html=True,
         )
+
+
+def fpa() -> None:
+    set_title()
+    chartContainer = st.container()
+    explanationContainer = st.container()
 
     if "filters" not in st.session_state:
         st.session_state["filters"] = get_filters()
