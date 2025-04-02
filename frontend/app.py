@@ -22,7 +22,9 @@ from streamlit_theme import st_theme
 sys.path.append("..")
 
 from forecastic.api import (
+    LLMNotAvailableException,
     get_app_settings,
+    get_explain_df,
     get_filters,
     get_forecast_as_plotly_json,
     get_llm_summary,
@@ -130,14 +132,18 @@ def fpa() -> None:
             )
 
         with st.spinner(gettext("Generating explanation...")):
-            forecast_summary = get_llm_summary(forecast_raw)
-            st.session_state["headline"] = forecast_summary.headline
-            st.session_state["forecast_interpretation"] = forecast_summary.summary_body
-            st.session_state["explanations_df"] = clean_column_headers(
-                pd.DataFrame(
-                    [i.model_dump() for i in forecast_summary.feature_explanations]
+            try:
+                forecast_summary = get_llm_summary(forecast_raw)
+                st.session_state["headline"] = forecast_summary.headline
+                st.session_state["forecast_interpretation"] = (
+                    forecast_summary.summary_body
                 )
-            )
+
+            except LLMNotAvailableException:
+                pass
+        st.session_state["explanations_df"] = clean_column_headers(
+            get_explain_df(forecast_raw)
+        )
 
     if "chart_json" in st.session_state:
         chartContainer.plotly_chart(
@@ -145,11 +151,13 @@ def fpa() -> None:
             config=CHART_CONFIG,
             use_container_width=True,
         )
-    if "forecast_interpretation" in st.session_state:
-        with explanationContainer:
+
+    with explanationContainer:
+        if "forecast_interpretation" in st.session_state:
             st.subheader(gettext("**AI Generated Analysis:**"))
             st.write(f"**{st.session_state['headline']}**")
             st.write(st.session_state["forecast_interpretation"])
+        if "explanations_df" in st.session_state:
             with st.expander(gettext("Important Features"), expanded=False):
                 st.write(st.session_state["explanations_df"])
 

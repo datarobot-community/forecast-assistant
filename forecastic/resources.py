@@ -87,6 +87,17 @@ class DynamicSettings(BaseSettings):
 time_series_deployment_env_name: str = "FORECAST_DEPLOYMENT_ID"
 scoring_dataset_env_name: str = "FORECAST_SCORING_DATASET_ID"
 app_env_name: str = "DATAROBOT_APPLICATION_ID"
+generative_deployment_env_name: str = "GENERATIVE_DEPLOYMENT_ID"
+
+
+class GenerativeDeployment(DynamicSettings):
+    id: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "MLOPS_RUNTIME_PARAM_" + generative_deployment_env_name,
+            generative_deployment_env_name,
+        ),
+    )
 
 
 class TimeSeriesDeployment(DynamicSettings):

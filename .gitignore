@@ -4,6 +4,7 @@ venv
 .venv
 .env
 .DS_Store
+.mypy_cache
 .vscode/
 frontend/dynamic_app_settings.json
 frontend/metadata.yaml

@@ -15,7 +15,9 @@
 import os
 from pathlib import Path
 
-from infra.common.globals import GlobalPredictionEnvironmentPlatforms
+from infra.common.globals import (
+    GlobalPredictionEnvironmentPlatforms,
+)
 
 from .common.schema import (
     PredictionEnvironmentArgs,
@@ -24,7 +26,6 @@ from .common.schema import (
 from .common.stack import get_stack
 
 project_name = get_stack()
-
 
 default_prediction_server_id = os.getenv("DATAROBOT_PREDICTION_ENVIRONMENT_ID", None)
 

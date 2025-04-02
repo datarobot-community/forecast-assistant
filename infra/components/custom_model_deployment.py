@@ -11,9 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
-
-from typing import Optional
+from typing import Optional, Sequence
 
 import pulumi
 import pulumi_datarobot as datarobot
@@ -28,6 +28,7 @@ class CustomModelDeployment(pulumi.ComponentResource):
         registered_model_args: RegisteredModelArgs,
         prediction_environment: datarobot.PredictionEnvironment,
         deployment_args: DeploymentArgs,
+        use_case_ids: Optional[Sequence[str | pulumi.Output[str]]] = None,
         custom_model_version_id: Optional[pulumi.Input[str]] = None,
         custom_model_args: Optional[CustomModelArgs] = None,
         opts: Optional[pulumi.ResourceOptions] = None,
@@ -68,11 +69,13 @@ class CustomModelDeployment(pulumi.ComponentResource):
             custom_model_version_id = datarobot.CustomModel(
                 **custom_model_args.model_dump(exclude_none=True),
                 opts=pulumi.ResourceOptions(parent=self),
+                use_case_ids=use_case_ids,
             ).version_id
         self.registered_model = datarobot.RegisteredModel(
             custom_model_version_id=custom_model_version_id,
             **registered_model_args.model_dump(mode="json"),
             opts=pulumi.ResourceOptions(parent=self),
+            use_case_ids=use_case_ids,
         )
 
         self.deployment = datarobot.Deployment(
@@ -80,6 +83,7 @@ class CustomModelDeployment(pulumi.ComponentResource):
             registered_model_version_id=self.registered_model.version_id,
             **deployment_args.model_dump(),
             opts=pulumi.ResourceOptions(parent=self),
+            use_case_ids=use_case_ids,
         )
 
         self.register_outputs(

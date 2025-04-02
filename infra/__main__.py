@@ -12,8 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
+import os
 import pathlib
 import sys
+import textwrap
 
 import pulumi
 import pulumi_datarobot as datarobot
@@ -21,10 +25,12 @@ import yaml
 
 sys.path.append("..")
 
+from forecastic.credentials import DRCredentials
 from forecastic.i18n import LocaleSettings
 from forecastic.resources import (
     ScoringDataset,
     app_env_name,
+    generative_deployment_env_name,
     scoring_dataset_env_name,
     time_series_deployment_env_name,
 )
@@ -32,22 +38,40 @@ from forecastic.schema import AppSettings
 from infra import (
     settings_app_infra,
     settings_forecast_deployment,
+    settings_generative,
     settings_main,
 )
 from infra.common.feature_flags import check_feature_flags
+from infra.common.globals import GlobalLLM
 from infra.common.papermill import run_notebook
 from infra.common.urls import get_deployment_url
-from infra.components.dr_credential import DRCredential
+from infra.components.custom_model_deployment import CustomModelDeployment
+from infra.components.dr_llm_credential import (
+    get_credential_runtime_parameter_values,
+    get_credentials,
+)
+from infra.components.proxy_llm_blueprint import ProxyLLMBlueprint
 from infra.settings_forecast_deployment import (
     get_deployment_args,
 )
-from infra.settings_llm_credential import credential, credential_args
 from infra.settings_main import (
     model_training_nb,
     model_training_output_file,
     scoring_prep_nb,
     scoring_prep_output_file,
 )
+from infra.settings_proxy_llm import CHAT_MODEL_NAME
+
+TEXTGEN_DEPLOYMENT_ID = os.environ.get("TEXTGEN_DEPLOYMENT_ID")
+TEXTGEN_REGISTERED_MODEL_ID = os.environ.get("TEXTGEN_REGISTERED_MODEL_ID")
+
+if settings_generative.LLM == GlobalLLM.DEPLOYED_LLM:
+    pulumi.info(f"{TEXTGEN_DEPLOYMENT_ID=}")
+    pulumi.info(f"{TEXTGEN_REGISTERED_MODEL_ID=}")
+    if (TEXTGEN_DEPLOYMENT_ID is None) == (TEXTGEN_REGISTERED_MODEL_ID is None):  # XOR
+        raise ValueError(
+            "Either TEXTGEN_DEPLOYMENT_ID or TEXTGEN_REGISTERED_MODEL_ID must be set when using a deployed LLM. Plese check your .env file"
+        )
 
 LocaleSettings().setup_locale()
 
@@ -63,6 +87,10 @@ else:
 with open(model_training_output_file) as f:
     model_training_output = AppSettings(**yaml.safe_load(f))
 
+use_case = datarobot.UseCase.get(
+    id=model_training_output.use_case_id,
+    resource_name="Forecasting Assistant Use Case",
+)
 
 if not scoring_prep_output_file.exists():
     pulumi.info("Executing scoring data prep notebook...")
@@ -117,12 +145,6 @@ retraining_policy = datarobot.DeploymentRetrainingPolicy(
     **settings_forecast_deployment.retraining_policy_settings.model_dump(),
 )
 
-llm_credential = DRCredential(
-    resource_name=f"Generic LLM Credential [{settings_main.project_name}]",
-    credential=credential,
-    credential_args=credential_args,
-)
-
 app_runtime_parameters = [
     datarobot.ApplicationSourceRuntimeParameterValueArgs(
         key=time_series_deployment_env_name,
@@ -137,7 +159,102 @@ app_runtime_parameters = [
     datarobot.ApplicationSourceRuntimeParameterValueArgs(
         key="APP_LOCALE", type="string", value=LocaleSettings().app_locale
     ),
-] + llm_credential.app_runtime_parameter_values
+]
+
+
+credentials: DRCredentials | None
+try:
+    credentials = get_credentials(settings_generative.LLM)
+except ValueError:
+    raise
+except TypeError:
+    pulumi.warn(
+        textwrap.dedent("""\
+        Failed to find credentials for LLM. Continuing deployment without LLM support.
+
+        If you intended to provide credentials, please consult the Readme and follow the instructions.
+        """)
+    )
+    credentials = None
+
+credentials_runtime_parameters_values = get_credential_runtime_parameter_values(
+    credentials
+)
+
+if credentials is not None or settings_generative.LLM is not None:
+    playground = datarobot.Playground(
+        use_case_id=use_case.id,
+        **settings_generative.playground_args.model_dump(),
+    )
+
+    if settings_generative.LLM == GlobalLLM.DEPLOYED_LLM:
+        if TEXTGEN_REGISTERED_MODEL_ID is not None:
+            proxy_llm_registered_model = datarobot.RegisteredModel.get(
+                resource_name="Existing TextGen Registered Model",
+                id=TEXTGEN_REGISTERED_MODEL_ID,
+            )
+
+            proxy_llm_deployment = datarobot.Deployment(
+                resource_name=f"Forecasting Assistant LLM Deployment [{settings_main.project_name}]",
+                registered_model_version_id=proxy_llm_registered_model.version_id,
+                prediction_environment_id=prediction_environment.id,
+                label=f"Forecasting Assistant LLM Deployment [{settings_main.project_name}]",
+                use_case_ids=[use_case.id],
+                opts=pulumi.ResourceOptions(
+                    replace_on_changes=["registered_model_version_id"]
+                ),
+            )
+        elif TEXTGEN_DEPLOYMENT_ID is not None:
+            proxy_llm_deployment = datarobot.Deployment.get(
+                resource_name="Existing LLM Deployment", id=TEXTGEN_DEPLOYMENT_ID
+            )
+        else:
+            raise ValueError(
+                "Either TEXTGEN_REGISTERED_MODEL_ID or TEXTGEN_DEPLOYMENT_ID have to be set in `.env`"
+            )
+
+        llm_blueprint = ProxyLLMBlueprint(
+            use_case_id=use_case.id,
+            playground_id=playground.id,
+            proxy_llm_deployment_id=proxy_llm_deployment.id,
+            chat_model_name=CHAT_MODEL_NAME,
+            **settings_generative.llm_blueprint_args.model_dump(mode="python"),
+        )
+
+    elif settings_generative.LLM != GlobalLLM.DEPLOYED_LLM:
+        llm_blueprint = datarobot.LlmBlueprint(  # type: ignore[assignment]
+            playground_id=playground.id,
+            **settings_generative.llm_blueprint_args.model_dump(),
+        )
+
+    generative_custom_model = datarobot.CustomModel(
+        **settings_generative.custom_model_args.model_dump(exclude_none=True),
+        use_case_ids=[use_case.id],
+        source_llm_blueprint_id=llm_blueprint.id,
+        runtime_parameter_values=[]
+        if settings_generative.LLM.name == GlobalLLM.DEPLOYED_LLM.name
+        else credentials_runtime_parameters_values,
+    )
+
+    generative_deployment = CustomModelDeployment(
+        resource_name=f"Forecasting Assistant LLM Deployment [{settings_main.project_name}]",
+        custom_model_version_id=generative_custom_model.version_id,
+        registered_model_args=settings_generative.registered_model_args,
+        prediction_environment=prediction_environment,
+        deployment_args=settings_generative.deployment_args,
+        use_case_ids=[use_case.id],
+    )
+
+    app_runtime_parameters.append(
+        datarobot.ApplicationSourceRuntimeParameterValueArgs(
+            key=generative_deployment_env_name,
+            type="deployment",
+            value=generative_deployment.id,
+        ),
+    )
+
+    pulumi.export(generative_deployment_env_name, generative_deployment.id)
+
 
 application_source = datarobot.ApplicationSource(
     files=settings_app_infra.get_app_files(app_runtime_parameters),

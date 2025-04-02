@@ -19,6 +19,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
 import datarobot as dr
+import pulumi
 import pulumi_datarobot as datarobot
 from datarobot.enums import VectorDatabaseChunkingMethod, VectorDatabaseEmbeddingModel
 from pydantic import BaseModel, ConfigDict, Field
@@ -33,7 +34,6 @@ from infra.common.schema_retraining import (
 
 from .globals import (
     GlobalGuardrailTemplateName,
-    GlobalLLM,
     GlobalPredictionEnvironmentPlatforms,
 )
 
@@ -85,16 +85,12 @@ class GuardrailTemplate(BaseModel):
     intervention: Intervention
 
 
-# datarobot.CustomModelArgs()
-
-
 class CustomModelArgs(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     resource_name: str
-    name: str
+    name: str | None = None
     description: str | None = None
-    base_environment_id: str
-    base_environment_name: str
+    base_environment_id: str | None = None
     base_environment_version_id: str | None = None
     target_name: str | None = None
     target_type: str | None = None
@@ -110,7 +106,7 @@ class CustomModelArgs(BaseModel):
 
 class RegisteredModelArgs(BaseModel):
     resource_name: str
-    name: str
+    name: str | None = None
 
 
 class DeploymentArgs(BaseModel):
@@ -160,7 +156,7 @@ class CustomModelGuardConfigurationArgs(BaseModel):
 
 class PlaygroundArgs(BaseModel):
     resource_name: str
-    name: str
+    name: str | None = None
 
 
 class LLMSettings(BaseModel):
@@ -174,11 +170,16 @@ class VectorDatabaseSettings(BaseModel):
 
 
 class LLMBlueprintArgs(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     resource_name: str
-    name: str
-    llm_settings: LLMSettings
-    llm_id: GlobalLLM
-    vector_database_settings: VectorDatabaseSettings
+    description: str | None = None
+    llm_id: str
+    llm_settings: datarobot.LlmBlueprintLlmSettingsArgs | None = None
+    name: str | None = None
+    prompt_type: str | None = None
+    vector_database_settings: (
+        datarobot.LlmBlueprintVectorDatabaseSettingsArgs | None
+    ) = None
 
 
 class ChunkingParameters(BaseModel):
@@ -186,25 +187,28 @@ class ChunkingParameters(BaseModel):
     chunking_method: VectorDatabaseChunkingMethod | None = None
     chunk_size: int | None = Field(ge=128, le=512)
     chunk_overlap_percentage: int | None = None
+    is_separator_regex: bool | None = None
     separators: list[str] | None = None
 
 
 class VectorDatabaseArgs(BaseModel):
     resource_name: str
-    name: str
+    name: str | None = None
     chunking_parameters: ChunkingParameters
 
 
 class DatasetArgs(BaseModel):
     resource_name: str
-    file_path: str
     name: str | None = None
+    file_path: str
 
 
 class UseCaseArgs(BaseModel):
     resource_name: str
     name: str | None = None
-    description: str | None
+    description: str | None = None
+    opts: Optional[pulumi.ResourceOptions] = None
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class PredictionEnvironmentArgs(BaseModel):

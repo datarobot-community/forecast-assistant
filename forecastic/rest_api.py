@@ -12,15 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
 
 import sys
+from http import HTTPStatus
 from typing import Any, List, Optional
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 sys.path.append("..")
 
 from forecastic.api import (
+    LLMNotAvailableException,
     get_app_settings,
     get_filters,
     get_formatted_predictions,
@@ -73,7 +76,13 @@ async def get_predictions_endpoint(
 async def get_llm_summary_endpoint(
     predictions: List[dict[str, Any]],
 ) -> ForecastSummary:
-    return get_llm_summary(predictions)
+    try:
+        return get_llm_summary(predictions)
+    except LLMNotAvailableException:
+        raise HTTPException(
+            status_code=HTTPStatus.SERVICE_UNAVAILABLE,
+            detail="LLM service not available",
+        )
 
 
 @app.patch("/share")
