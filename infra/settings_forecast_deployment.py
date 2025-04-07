@@ -11,27 +11,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
 import datarobot as dr
 import pulumi_datarobot as datarobot
-
-from .common.schema import (
-    DeploymentArgs,
-    DeploymentRetrainingPolicyArgs,
-)
-from .common.schema_retraining import (
-    Action,
+from datarobot_pulumi_utils.schema.common import Schedule
+from datarobot_pulumi_utils.schema.custom_models import DeploymentArgs
+from datarobot_pulumi_utils.schema.training import (
+    ActionType,
     AutopilotOptions,
     CVMethod,
+    DeploymentRetrainingPolicyArgs,
     FeatureListStrategy,
     ModelSelectionStrategy,
     ProjectOptions,
     ProjectOptionsStrategy,
-    Schedule,
-    Trigger,
+    RetrainingTrigger,
     TriggerType,
 )
+
 from .settings_main import default_prediction_server_id, project_name
 
 
@@ -79,15 +75,15 @@ def get_deployment_args(
 retraining_policy_settings = DeploymentRetrainingPolicyArgs(
     resource_name=f"Retrain on Accuracy Decline [{project_name}]",
     description="",
-    action=Action.ModelReplacement,
+    action=ActionType.MODEL_REPLACEMENT,
     autopilot_options=AutopilotOptions(
         mode=dr.enums.AUTOPILOT_MODE.QUICK,
         blend_best_models=False,
         shap_only_mode=False,
         run_leakage_removed_feature_list=True,
     ),
-    trigger=Trigger(
-        type=TriggerType.accuracy_decline,
+    trigger=RetrainingTrigger(
+        type=TriggerType.ACCURACY_DECLINE,
         schedule=Schedule(
             minutes=["0"],
             hours=["0"],
@@ -99,11 +95,11 @@ retraining_policy_settings = DeploymentRetrainingPolicyArgs(
         status_declines_to_failing=False,
         status_still_in_decline=False,
     ),
-    project_options_strategy=ProjectOptionsStrategy.SameAsChampion,
-    feature_list_strategy=FeatureListStrategy.InformativeFeatures,
-    model_selection_strategy=ModelSelectionStrategy.AutopilotRecommended,
+    project_options_strategy=ProjectOptionsStrategy.SAME_AS_CHAMPION,
+    feature_list_strategy=FeatureListStrategy.INFORMATIVE_FEATURES,
+    model_selection_strategy=ModelSelectionStrategy.AUTOPILOT_RECOMMENDED,
     project_options=ProjectOptions(
-        cv_method=CVMethod.RandomCV,
+        cv_method=CVMethod.RANDOM_CV,
         validation_type=dr.enums.VALIDATION_TYPE.CV,
         reps=None,
         validation_pct=None,

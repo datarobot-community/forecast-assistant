@@ -11,8 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
 from __future__ import annotations
 
 import datetime as dt
@@ -29,16 +27,16 @@ import plotly.graph_objects as go
 import yaml
 from datarobot.errors import ClientError
 from datarobot_predict.deployment import predict
-from openai import AzureOpenAI
+from openai import OpenAI
 from plotly.subplots import make_subplots
 from pydantic import ValidationError
 
 sys.path.append("..")
 
-from forecastic.credentials import AzureOpenAICredentials
 from forecastic.i18n import gettext
 from forecastic.resources import (
     Application,
+    GenerativeDeployment,
     ScoringDataset,
     TimeSeriesDeployment,
     app_settings_file_name,
@@ -65,12 +63,7 @@ try:
 
     time_series_deployment_id = TimeSeriesDeployment().id
     scoring_dataset_id = ScoringDataset().id
-    credentials = AzureOpenAICredentials()
-    azure_client = AzureOpenAI(
-        azure_endpoint=credentials.azure_endpoint,
-        api_key=credentials.api_key,
-        api_version=credentials.api_version,
-    )
+
 except (FileNotFoundError, ValidationError) as e:
     raise ValueError(
         gettext(
@@ -82,12 +75,48 @@ except (FileNotFoundError, ValidationError) as e:
     ) from e
 
 
+class LLMNotAvailableException(Exception):
+    """Exception raised when the LLM is unavailable."""
+
+
+def _get_completion(
+    prompt: str,
+    temperature: float = 0,
+    system_prompt: Optional[str] = None,
+    llm_model_name: Optional[str] = None,
+) -> str:
+    """Generate LLM completion."""
+    generative_deployment_id = GenerativeDeployment().id
+    try:
+        dr_client = dr.client.get_client()
+        azure_client = OpenAI(
+            base_url=dr_client.endpoint.rstrip("/")
+            + f"/deployments/{generative_deployment_id}",
+            api_key=dr_client.token,
+        )
+        if system_prompt:
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt},
+            ]
+        else:
+            messages = [{"role": "user", "content": prompt}]
+        resp = azure_client.chat.completions.create(
+            messages=messages,  # type: ignore[arg-type]
+            model="datarobot-deployed-llm",
+            temperature=temperature,
+        )
+        return str(resp.choices[0].message.content)
+    except Exception as e:
+        raise LLMNotAvailableException("LLM is unavailable.") from e
+
+
 def get_app_settings() -> AppSettings:
     return app_settings
 
 
 def _get_app_urls() -> AppUrls:
-    base_url = urljoin(dr.Client().endpoint, "..")  # type: ignore[attr-defined]
+    base_url = urljoin(dr.Client().endpoint, "..")
     dataset_url = (
         f"usecases/{app_settings.use_case_id}/explore/dataset/{scoring_dataset_id}"
     )
@@ -101,7 +130,7 @@ def _get_app_urls() -> AppUrls:
 
 
 def _get_app_metadata() -> Tuple[str, str]:
-    client = dr.Client()  # type: ignore[attr-defined]
+    client = dr.Client()
     try:
         application_id = Application().id
         url = f"customApplications/{application_id}/"
@@ -134,7 +163,7 @@ def get_runtime_attributes() -> AppRuntimeAttributes:
 @functools.lru_cache(maxsize=16)
 def _get_scoring_data() -> pd.DataFrame:
     """Get the scoring data from DataRobot."""
-    return dr.Dataset.get(scoring_dataset_id).get_as_dataframe()  # type: ignore[attr-defined]
+    return dr.Dataset.get(scoring_dataset_id).get_as_dataframe()
 
 
 def get_scoring_data(
@@ -213,7 +242,7 @@ def get_predictions(scoring_data: list[dict[str, Any]]) -> list[dict[str, Any]]:
 @functools.lru_cache(maxsize=16)
 def _get_predictions_cached(scoring_data_json: str) -> pd.DataFrame:
     predictions = predict(
-        deployment=dr.Deployment.get(time_series_deployment_id),  # type: ignore[attr-defined]
+        deployment=dr.Deployment.get(time_series_deployment_id),
         data_frame=pd.DataFrame(json.loads(scoring_data_json)),
         max_explanations=3,
     ).dataframe
@@ -252,7 +281,7 @@ def _process_predictions(predictions: list[dict[str, Any]]) -> list[PredictionRo
     prediction_interval = f"{app_settings.prediction_interval:.0f}"
     bound_at_zero = app_settings.lower_bound_forecast_at_0
 
-    target = dr.Project.get(app_settings.project_id).target  # type: ignore[attr-defined]
+    target = dr.Project.get(app_settings.project_id).target
 
     date_id = app_settings.datetime_partition_column
     series_id = app_settings.multiseries_id_column
@@ -300,7 +329,7 @@ def _format_predictions(predictions: list[dict[str, Any]]) -> list[dict[Any, Any
 
     data = pd.DataFrame(predictions)
 
-    target = dr.Project.get(app_settings.project_id).target  # type: ignore[attr-defined]
+    target = dr.Project.get(app_settings.project_id).target
     multiseries_id_column = app_settings.multiseries_id_column
     date_id = app_settings.datetime_partition_column
     prediction_interval = f"{app_settings.prediction_interval:.0f}"
@@ -473,6 +502,23 @@ def _aggregate_scoring_data(scoring_data: list[dict[str, Any]]) -> pd.DataFrame:
     )
 
 
+def get_pred_ex_df(preds: List[dict[str, Any]]) -> pd.DataFrame:
+    preds_df = pd.DataFrame(preds)
+    names = []
+    strengths = []
+    values = []
+
+    for i in range(1, 4):  # 1, 2, 3
+        names.extend(preds_df[f"EXPLANATION_{i}_FEATURE_NAME"])
+        strengths.extend(preds_df[f"EXPLANATION_{i}_STRENGTH"])
+        values.extend(preds_df[f"EXPLANATION_{i}_ACTUAL_VALUE"])
+
+    pred_ex_df = pd.DataFrame(
+        {"feature": names, "strength": strengths, "value": values}
+    )
+    return pred_ex_df
+
+
 def get_llm_summary(predictions: List[dict[str, Any]]) -> ForecastSummary:
     """
     Generate summary and headline of the forecast from the LLM model.
@@ -493,48 +539,85 @@ def get_llm_summary(predictions: List[dict[str, Any]]) -> ForecastSummary:
         An object containing the headline, summary body, and explanation dataset.
     """
 
-    preds = pd.DataFrame(predictions)
+    # preds = pd.DataFrame(predictions)
     processed_preds = _process_predictions(predictions)
-
-    names = []
-    strengths = []
-    values = []
-
-    for i in range(1, 4):  # 1, 2, 3
-        names.extend(preds[f"EXPLANATION_{i}_FEATURE_NAME"])
-        strengths.extend(preds[f"EXPLANATION_{i}_STRENGTH"])
-        values.extend(preds[f"EXPLANATION_{i}_ACTUAL_VALUE"])
-
-    pred_ex_df = pd.DataFrame(
-        {"feature": names, "strength": strengths, "value": values}
-    )
+    pred_ex_df = get_pred_ex_df(predictions)
 
     # Create summary for target derived features
-    include_target_prompt_df, include_target_summary = _summarize_dataframe(
-        pred_ex_df, ex_target=False
-    )
+    include_target_summary = _summarize_dataframe(pred_ex_df, ex_target=False)
 
     # Create summary for exogenous features
-    exclude_target_prompt_df, exclude_target_summary = _summarize_dataframe(
+    exclude_target_summary = _summarize_dataframe(pred_ex_df, ex_target=True)
+
+    return ForecastSummary(
+        headline=_make_headline(processed_preds),
+        summary_body=include_target_summary + "\n\n\n" + exclude_target_summary,
+    )
+
+
+def get_explain_df(predictions: List[dict[str, Any]]) -> pd.DataFrame:
+    pred_ex_df = get_pred_ex_df(predictions)
+    include_target_prompt_df = assemble_prediction_explanations(
+        pred_ex_df, ex_target=False
+    )
+    exclude_target_prompt_df = assemble_prediction_explanations(
         pred_ex_df, ex_target=True
     )
+
     explain_df = pd.concat((include_target_prompt_df, exclude_target_prompt_df)).rename(
         columns={
             "Relative Importance": "relative_importance",
             "index": "feature_name",
         }
     )
+    explain_df = explain_df.sort_values(
+        "relative_importance", ascending=False
+    ).reset_index(drop=True)
+    explain_df["Rank"] = range(1, len(explain_df) + 1)
 
-    return ForecastSummary(
-        headline=_make_headline(processed_preds),
-        summary_body=include_target_summary + "\n\n\n" + exclude_target_summary,
-        feature_explanations=explain_df.to_dict(orient="records"),
+    return explain_df
+
+
+def assemble_prediction_explanations(
+    explain_df: pd.DataFrame, ex_target: bool
+) -> pd.DataFrame:
+    target = app_settings.target
+    if ex_target:
+        explain_df = explain_df[
+            ~explain_df["feature"].str.startswith(target + " (")
+        ].copy()
+    else:
+        explain_df = explain_df[
+            explain_df["feature"].str.startswith(target + " (")
+        ].copy()
+    prompt_df = get_top_features(explain_df)
+    return prompt_df.assign(is_target_derived=not ex_target).reset_index()
+
+
+def get_top_features(
+    prediction_explanations_df: pd.DataFrame,
+    top_feature_threshold: int = 75,
+    top_n_features: int = 4,
+) -> pd.DataFrame:
+    total_strength = (
+        prediction_explanations_df.groupby("feature")["strength"]
+        .apply(lambda c: c.abs().sum())
+        .sort_values(ascending=False)
     )
+    total_strength = ((total_strength / total_strength.sum()) * 100).astype(int)
+    total_strength.index.name = None
+    cum_total_strength = total_strength.cumsum()
+    top_features = pd.DataFrame(
+        total_strength[cum_total_strength.shift(1).fillna(0) < top_feature_threshold][
+            :top_n_features
+        ],
+    ).rename(columns={"strength": "relative_importance"})
+    top_features["Rank"] = range(1, 1 + len(top_features))
+
+    return top_features
 
 
-def _summarize_dataframe(
-    prompt_dataframe: pd.DataFrame, ex_target: bool
-) -> tuple[pd.DataFrame, str]:
+def _summarize_dataframe(prompt_dataframe: pd.DataFrame, ex_target: bool) -> str:
     """
     Get the LLM sub-summary for the forecast.
     """
@@ -562,42 +645,25 @@ def _summarize_dataframe(
         explain_df = prompt_dataframe[
             prompt_dataframe["feature"].str.startswith(target + " (")
         ].copy()
-    prompt_string, prompt_df = _get_prompt(
+    prompt_string = _get_prompt(
         explain_df,
         prompt,
     )
     prompt_completion = _get_completion(prompt_string, temperature=0)
-    return (
-        prompt_df.assign(is_target_derived=not ex_target).reset_index(),
-        prompt_completion,
-    )
+    return prompt_completion
 
 
 def _get_prompt(
     prediction_explanations_df: pd.DataFrame,
     prompt: str,
-    top_feature_threshold: int = 75,
-    top_n_features: int = 4,
-) -> tuple[str, pd.DataFrame]:
+) -> str:
     """Build prompt to summarize prediction explanations data."""
-    total_strength = (
-        prediction_explanations_df.groupby("feature")["strength"]
-        .apply(lambda c: c.abs().sum())
-        .sort_values(ascending=False)
+    top_features = get_top_features(
+        prediction_explanations_df=prediction_explanations_df
     )
-    total_strength = ((total_strength / total_strength.sum()) * 100).astype(int)
-    total_strength.index.name = None
-    cum_total_strength = total_strength.cumsum()
-    top_features = pd.DataFrame(
-        total_strength[cum_total_strength.shift(1).fillna(0) < top_feature_threshold][
-            :top_n_features
-        ],
-    ).rename(columns={"strength": "relative_importance"})
-    top_features["Rank"] = range(1, 1 + len(top_features))
-
     top_features_string = top_features.drop(columns="relative_importance").to_string()
 
-    return prompt + f"\n\n\n{top_features_string}", top_features.drop(columns="Rank")
+    return prompt + f"\n\n\n{top_features_string}"
 
 
 def _make_headline(standardized_predictions: list[PredictionRow]) -> str:
@@ -610,35 +676,9 @@ def _make_headline(standardized_predictions: list[PredictionRow]) -> str:
     )
 
 
-def _get_completion(
-    prompt: str,
-    temperature: float = 0,
-    system_prompt: Optional[str] = None,
-    llm_model_name: Optional[str] = None,
-) -> str:
-    """Generate LLM completion."""
-    if system_prompt:
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": prompt},
-        ]
-    else:
-        messages = [{"role": "user", "content": prompt}]
-    resp = azure_client.chat.completions.create(
-        messages=messages,  # type: ignore[arg-type]
-        model=(
-            llm_model_name
-            if llm_model_name is not None
-            else credentials.azure_deployment
-        ),
-        temperature=temperature,
-    )
-    return str(resp.choices[0].message.content)
-
-
 def share_access(emails: List[str]) -> None:
     """Share application with other users."""
-    client = dr.Client()  # type: ignore[attr-defined]
+    client = dr.Client()
     try:
         application_id = Application().id
     except ValidationError as e:

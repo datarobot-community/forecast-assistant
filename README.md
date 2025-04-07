@@ -17,6 +17,8 @@ The forecast assistant is a customizable application template for building AI-po
 3. [Why build AI Apps with DataRobot app templates?](#why-build-ai-apps-with-datarobot-app-templates)
 4. [Make changes](#make-changes)
    - [Change the data and how the model is trained](#change-the-data-and-how-the-model-is-trained)
+   - [Disable the LLM](#disable-the-llm)
+   - [Change the LLM](#change-the-llm)
    - [Change the front-end](#change-the-front-end)
    - [Change the language in the front-end](#change-the-language-in-the-front-end)
 5. [Share results](#share-results)
@@ -44,36 +46,22 @@ The forecast assistant is a customizable application template for building AI-po
    ```
 
 3. Rename the file `.env.template` to `.env` in the root directory of the repo and populate your credentials.
-   This template is pre-configured to use an Azure OpenAI endpoint. If you wish to use a different LLM provider, modifications to the code will be necessary.
-
-   ```bash
-   DATAROBOT_API_TOKEN=...
-   DATAROBOT_ENDPOINT=...  # e.g. https://app.datarobot.com/api/v2
-   # [Optional]: Provide an ID of a dedicated prediction environment - otherwise we create a new serverless prediction environment
-   # DATAROBOT_PREDICTION_ENVIRONMENT_ID=...  # dedicated prediction server id from https://app.datarobot.com/console-nextgen/prediction-environments
-   OPENAI_API_KEY=...
-   OPENAI_API_VERSION=...  # e.g. 2024-02-01
-   OPENAI_API_BASE=...  # e.g. https://your_org.openai.azure.com/
-   OPENAI_API_DEPLOYMENT_ID=...  # e.g. gpt-4
-   PULUMI_CONFIG_PASSPHRASE=...  # required, choose an alphanumeric passphrase to be used for encrypting pulumi config
-   ```
-   Use the following resources to locate the required credentials:
-   - **DataRobot API Token**: Refer to the *Create a DataRobot API Key* section of the [DataRobot API Quickstart docs](https://docs.datarobot.com/en/docs/api/api-quickstart/index.html#create-a-datarobot-api-key).
-   - **DataRobot Endpoint**: Refer to the *Retrieve the API Endpoint* section of the same [DataRobot API Quickstart docs](https://docs.datarobot.com/en/docs/api/api-quickstart/index.html#retrieve-the-api-endpoint).
-   - **LLM Endpoint and API Key**: Refer to the [Azure OpenAI documentation](https://learn.microsoft.com/en-us/azure/ai-services/openai/chatgpt-quickstart?tabs=command-line%2Cjavascript-keyless%2Ctypescript-keyless%2Cpython-new&pivots=programming-language-python#retrieve-key-and-endpoint).
-
+   
+   [Optional] If you want to use the GenAI functionality of the app, follow the instructions in `.env` to supply LLM credentials.
+   
 4. In a terminal, run the following command:
+   
    ```bash
    python quickstart.py YOUR_PROJECT_NAME  # Windows users may have to use `py` instead of `python`
    ```
    Python 3.9+ is required.
 
-Advanced users who want to control virtual environment creation, dependency installation, environment variable setup
+Advanced users who want to control virtual environment creation, dependency installation, environment variable setup,
 and `pulumi` invocation, see [the advanced setup instructions](#setup-for-advanced-users).
 
 
 ## Architecture overview
-![Forecast assistant](https://s3.amazonaws.com/datarobot_public/drx/recipe_gifs/forecasting_architecture.svg)
+![Forecast assistant](https://s3.us-east-1.amazonaws.com/datarobot_public/drx/recipe_gifs/forecast-assistant-diagram.svg)
 
 App Templates contain three families of complementary logic. For this template, you can [opt-in](#make-changes) to fully 
 custom AI logic and a fully custom front-end or utilize DataRobot's off-the-shelf offerings:
@@ -119,6 +107,27 @@ source set_env.sh  # On windows use `set_env.bat`
 pulumi up
 ```  
 4. For a forecasting app that is continuously updated, consider running `prep_scoring_data.ipynb` on a schedule.
+
+### Disable the LLM
+In `infra/settings_generative.py`: Set `LLM=None` to disable any generative output altogether.
+
+### Change the LLM
+
+1. Modify the `LLM` setting in `infra/settings_generative.py` by changing `LLM=GlobalLLM.AZURE_OPENAI_GPT_4_O_MINI` to any other LLM from the `GlobalLLM` object. 
+     - Trial users: Please set `LLM=GlobalLLM.AZURE_OPENAI_GPT_4_O_MINI` since GPT-4o is not supported in the trial. Use the `OPENAI_API_DEPLOYMENT_ID` in `.env` to override which model is used in your azure organisation. You'll still see GPT 4o-mini in the playground, but the deployed app will use the provided azure deployment.  
+2. To use an existing TextGen model or deployment:
+      - In `infra/settings_generative.py`: Set `LLM=GlobalLLM.DEPLOYED_LLM`.
+      - In `.env`: Set either the `TEXTGEN_REGISTERED_MODEL_ID` or the `TEXTGEN_DEPLOYMENT_ID`
+      - In `.env`: Set `CHAT_MODEL_NAME` to the model name expected by the deployment (e.g. "claude-3-7-sonnet-20250219" for an anthropic deployment, "datarobot-deployed-llm" for NIM models ) 
+3. In `.env`: If not using an existing TextGen model or deployment, provide the required credentials dependent on your choice.
+4. Run `pulumi up` to update your stack (Or rerun your quickstart).
+      ```bash
+      source set_env.sh  # On windows use `set_env.bat`
+      pulumi up
+      ```
+
+> **⚠️ Availability information:**  
+> Using a NIM model requires custom model GPU inference, a premium feature. You will experience errors by using this type of model without the feature enabled. Contact your DataRobot representative or administrator for information on enabling this feature.
 
 ### Change the front-end
 1. Ensure you have already run `pulumi up` at least once (to provision the time series deployment).

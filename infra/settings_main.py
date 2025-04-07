@@ -11,26 +11,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import os
 from pathlib import Path
 
-from infra.common.globals import GlobalPredictionEnvironmentPlatforms
-
-from .common.schema import (
+from datarobot_pulumi_utils.pulumi.stack import get_stack
+from datarobot_pulumi_utils.schema.common import UseCaseArgs
+from datarobot_pulumi_utils.schema.custom_models import (
     PredictionEnvironmentArgs,
-    UseCaseArgs,
+    PredictionEnvironmentPlatforms,
 )
-from .common.stack import get_stack
 
 project_name = get_stack()
-
 
 default_prediction_server_id = os.getenv("DATAROBOT_PREDICTION_ENVIRONMENT_ID", None)
 
 prediction_environment_args = PredictionEnvironmentArgs(
     resource_name=f"Forecast Assistant Prediction Environment [{project_name}]",
-    platform=GlobalPredictionEnvironmentPlatforms.DATAROBOT_SERVERLESS,
+    platform=PredictionEnvironmentPlatforms.DATAROBOT_SERVERLESS,
 ).model_dump(mode="json", exclude_none=True)
 
 

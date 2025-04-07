@@ -11,9 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from datarobot_pulumi_utils.schema.datasets import DatasetArgs
 
-
-from .common.schema import DatasetArgs
 from .settings_main import project_name
 
 training_dataset = DatasetArgs(

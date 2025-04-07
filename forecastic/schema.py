@@ -11,11 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
 from __future__ import annotations
 
-from typing import Any, Dict, List, cast
+from typing import Any, cast
 
 import datarobot as dr
 from pydantic import BaseModel, ConfigDict, Field
@@ -27,8 +25,16 @@ class FeatureSettingConfig(BaseModel):
     do_not_derive: bool | None = None
 
 
+association_id = "association_id"
+
+
+class GenerativeDeploymentSettings(BaseModel):
+    target_feature_name: str = "resultText"
+    prompt_feature_name: str = "promptText"
+
+
 class WhatIfFeature(FeatureSettingConfig):
-    values: List[str] = Field(default_factory=list)
+    values: list[str] = Field(default_factory=list)
 
 
 class CategoryFilter(BaseModel):
@@ -41,7 +47,7 @@ class StaticAppSettings(BaseModel):
     page_description: str
     graph_y_axis: str
     lower_bound_forecast_at_0: bool
-    filterable_categories: List[CategoryFilter]
+    filterable_categories: list[CategoryFilter]
     headline_prompt: str
 
 
@@ -56,10 +62,10 @@ class AppSettings(BaseModel):
             "ID of the AutoTS registered model version to be deployed for forecasting"
         )
     )
-    what_if_features: List[WhatIfFeature] = Field(
+    what_if_features: list[WhatIfFeature] = Field(
         description="Features that may be of interest for what if analysis in the front end"
     )
-    important_features: List[dict[str, Any]] = Field(
+    important_features: list[dict[str, Any]] = Field(
         description="List of most important features exposed to the front end for rendering"
     )
     prediction_interval: int = Field(
@@ -82,7 +88,7 @@ class AppSettings(BaseModel):
     maximum_default_display_length: int = Field(
         description="Maximum number of historical points to display on chart by default"
     )
-    timestep_settings: Dict[str, Any]
+    timestep_settings: dict[str, Any]
     datetime_partition_column: str = Field(
         description="Name of the untransformed datetime partition column in the training dataset"
     )
@@ -91,7 +97,7 @@ class AppSettings(BaseModel):
     )
     training_dataset_id: str
     calendar_id: str
-    filterable_categories: List[CategoryFilter] = Field(
+    filterable_categories: list[CategoryFilter] = Field(
         description="List of filterable categories"
     )
     page_description: str
@@ -107,12 +113,12 @@ class AppSettings(BaseModel):
         target: str,
         registered_model_id: str,
         registered_model_version_id: str,
-        what_if_features: List[FeatureSettingConfig],
-        important_features: List[dict[str, Any]],
+        what_if_features: list[FeatureSettingConfig],
+        important_features: list[dict[str, Any]],
         prediction_interval: int,
         static_app_settings: StaticAppSettings,
     ) -> AppSettings:
-        registered_model_version = dr.RegisteredModel.get(  # type: ignore
+        registered_model_version = dr.RegisteredModel.get(
             registered_model_id
         ).get_version(registered_model_version_id)
         if registered_model_version.source_meta.get("project_id", None) is None:
@@ -121,10 +127,10 @@ class AppSettings(BaseModel):
             )
         use_case_id = cast(
             str,
-            registered_model_version.source_meta.get("use_case_details").get("id"),  # type: ignore
+            registered_model_version.source_meta.get("use_case_details").get("id"),  # type: ignore[union-attr]
         )
         project_id = cast(str, registered_model_version.source_meta.get("project_id"))
-        project = dr.Project.get(project_id)  # type: ignore
+        project = dr.Project.get(project_id)
         datetime_partitioning = dr.DatetimePartitioning.get(project_id)
         datetime_partitioning_specification = datetime_partitioning.get_input_data(
             project_id, datetime_partitioning.datetime_partitioning_id
@@ -158,7 +164,7 @@ class AppSettings(BaseModel):
             use_case_id=use_case_id,
             project_id=project_id,
             model_id=registered_model_version.model_id,
-            model_name=dr.Model.get(  # type: ignore
+            model_name=dr.Model.get(
                 project_id, registered_model_version.model_id
             ).model_type,
             date_format=datetime_partitioning.date_format,
@@ -189,9 +195,9 @@ class AppSettings(BaseModel):
     @classmethod
     def get_timestamp_settings(
         cls, project_id: str, datetime_partition_column_raw: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         url = f"projects/{project_id}/features/{datetime_partition_column_raw}/multiseriesProperties"
-        response = dr.Client().get(url).json()  # type: ignore
+        response = dr.Client().get(url).json()
         timestep_settings: dict[str, Any] = response["detectedMultiseriesIdColumns"][0]
         del timestep_settings["multiseriesIdColumns"]
         return timestep_settings
@@ -200,12 +206,12 @@ class AppSettings(BaseModel):
 class MultiSelectFilter(BaseModel):
     column_name: str
     display_name: str
-    valid_values: List[str]
+    valid_values: list[str]
 
 
 class FilterSpec(BaseModel):
     column: str
-    selected_values: List[str]
+    selected_values: list[str]
 
 
 class PredictionRow(BaseModel):
@@ -224,7 +230,6 @@ class ExplanationRow(BaseModel):
 class ForecastSummary(BaseModel):
     headline: str
     summary_body: str
-    feature_explanations: list[ExplanationRow]
 
 
 class AppUrls(BaseModel):

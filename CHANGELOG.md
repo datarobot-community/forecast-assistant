@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.1.17] - 2025-04-07
+
+### Added
+- Forecast assistant now uses a DataRobot LLM Blueprint
+- LLM integration is now optional
+- Support for existing textgen deployments or registered models
+- Installed [the datarobot-pulumi-utils library](https://github.com/datarobot-oss/datarobot-pulumi-utils) to incorporate majority of reused logic in the `infra.*` subpackages.
+
 ## [0.1.16] - 2025-03-06
 
 ### Fixed
@@ -35,9 +43,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.13] - 2024-12-18
 
 ### Changed
-
 - App backend no longer depends on the current working dir to read yaml settings
 - Default scoring data is a 6 month period
+
 
 ### Fixed
 

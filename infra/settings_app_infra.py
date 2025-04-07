@@ -11,15 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import textwrap
 from typing import List, Tuple
 
 import pulumi_datarobot as datarobot
+from datarobot_pulumi_utils.schema.apps import ApplicationSourceArgs
+from datarobot_pulumi_utils.schema.exec_envs import (
+    RuntimeEnvironments,
+)
 
 from forecastic.i18n import LanguageCode, LocaleSettings
-from infra.common.globals import GlobalRuntimeEnvironment
-from infra.common.schema import ApplicationSourceArgs
 from infra.settings_main import (
     PROJECT_ROOT,
     model_training_output_file,
@@ -30,11 +31,11 @@ from infra.settings_main import (
 application_path = PROJECT_ROOT / "frontend"
 
 app_source_args = ApplicationSourceArgs(
-    resource_name=f"Forecast Assistant App Source [{project_name}]",
-    base_environment_id=GlobalRuntimeEnvironment.PYTHON_39_STREAMLIT.value.id,
+    resource_name=f"Forecasting Assistant App Source [{project_name}]",
+    base_environment_id=RuntimeEnvironments.PYTHON_312_APPLICATION_BASE.value.id,
 ).model_dump(mode="json", exclude_none=True)
 
-app_resource_name: str = f"Forecast Assistant Application [{project_name}]"
+app_resource_name: str = f"Forecasting Assistant Application [{project_name}]"
 application_locale = LocaleSettings().app_locale
 
 

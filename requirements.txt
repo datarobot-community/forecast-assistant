@@ -1,5 +1,6 @@
-pulumi>=3.133.0,<4
-pulumi-datarobot>=0.8.14,<0.9
+pulumi==3.153.0
+pulumi-datarobot>=0.8.15,<0.9
+datarobot-pulumi-utils>=0.0.2,<0.1
 
 datarobot>=3.5.2,<3.6
 datarobot-predict>=1.9.2,<1.10
@@ -28,3 +29,5 @@ types-PyYAML==6.0.12.20240917
 ruff==0.6.9
 
 fastapi[standard]>=0.115.5,<1
+boto3
+google-auth

@@ -11,14 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from __future__ import annotations
 
 import contextlib
 import logging
 import os
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Generator
 
 import datarobot as dr
 import pandas as pd
@@ -29,7 +29,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 @contextlib.contextmanager
-def cd(new_dir: Path):
+def cd(new_dir: Path | str) -> Generator[None, None, None]:
     """Changes the current working directory to the given path and restores the old directory on exit."""
     prev_dir = os.getcwd()
     os.chdir(new_dir)
@@ -40,14 +40,14 @@ def cd(new_dir: Path):
 
 
 @pytest.fixture
-def new_dir():
+def new_dir() -> Generator[None, None, None]:
     with cd("frontend"):
         sys.path.append(".")
         yield
 
 
 @pytest.fixture
-def scoring_data(dr_client, new_dir):
+def scoring_data(dr_client, new_dir):  # type: ignore[no-untyped-def]
     from forecastic.resources import ScoringDataset
 
     return (
@@ -55,7 +55,7 @@ def scoring_data(dr_client, new_dir):
     )
 
 
-def test_ts_prediction(scoring_data: list[dict[str, Any]]):
+def test_ts_prediction(scoring_data: list[dict[str, Any]]) -> None:
     from forecastic.api import get_predictions, get_standardized_predictions
 
     predictions = get_predictions(scoring_data)
