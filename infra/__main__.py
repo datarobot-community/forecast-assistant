@@ -63,6 +63,8 @@ from utils.papermill import run_notebook
 
 TEXTGEN_DEPLOYMENT_ID = os.environ.get("TEXTGEN_DEPLOYMENT_ID")
 TEXTGEN_REGISTERED_MODEL_ID = os.environ.get("TEXTGEN_REGISTERED_MODEL_ID")
+# Set FORECAST_DEPLOYMENT_ID to use an existing forecast deployment instead of creating a new one
+FORECAST_DEPLOYMENT_ID = os.environ.get("FORECAST_DEPLOYMENT_ID")
 
 if settings_generative.LLM == LLMs.DEPLOYED_LLM:
     pulumi.info(f"{TEXTGEN_DEPLOYMENT_ID=}")
@@ -120,30 +122,45 @@ deployment_args = get_deployment_args(
     prediction_interval=model_training_output.prediction_interval,
 )
 
-forecast_deployment = datarobot.Deployment(
-    prediction_environment_id=prediction_environment.id,
-    registered_model_version_id=model_training_output.registered_model_version_id,
-    **deployment_args.model_dump(),
-    use_case_ids=[model_training_output.use_case_id],
-)
+# Check if using an existing forecast deployment or creating a new one
+if FORECAST_DEPLOYMENT_ID is not None:
+    pulumi.info(f"Using existing forecast deployment: {FORECAST_DEPLOYMENT_ID}")
+    forecast_deployment = datarobot.Deployment.get(
+        resource_name="Existing Forecast Deployment",
+        id=FORECAST_DEPLOYMENT_ID,
+    )
+else:
+    pulumi.info("Creating new forecast deployment...")
+    forecast_deployment = datarobot.Deployment(
+        prediction_environment_id=prediction_environment.id,
+        registered_model_version_id=model_training_output.registered_model_version_id,
+        **deployment_args.model_dump(),
+        use_case_ids=[model_training_output.use_case_id],
+    )
 
-batch_prediction_job = datarobot.BatchPredictionJobDefinition(
-    resource_name=settings_forecast_deployment.batch_prediction_job_name,
-    enabled=True,
-    deployment_id=forecast_deployment.id,
-    intake_settings=datarobot.BatchPredictionJobDefinitionIntakeSettingsArgs(
-        type="dataset", dataset_id=scoring_dataset_id
-    ),
-    output_settings=datarobot.BatchPredictionJobDefinitionOutputSettingsArgs(
-        type="localFile"
-    ),
-    schedule=settings_forecast_deployment.batch_prediction_job_schedule,
-)
+# Only create batch prediction job and retraining policy for new deployments
+if FORECAST_DEPLOYMENT_ID is None:
+    batch_prediction_job = datarobot.BatchPredictionJobDefinition(
+        resource_name=settings_forecast_deployment.batch_prediction_job_name,
+        enabled=True,
+        deployment_id=forecast_deployment.id,
+        intake_settings=datarobot.BatchPredictionJobDefinitionIntakeSettingsArgs(
+            type="dataset", dataset_id=scoring_dataset_id
+        ),
+        output_settings=datarobot.BatchPredictionJobDefinitionOutputSettingsArgs(
+            type="localFile"
+        ),
+        schedule=settings_forecast_deployment.batch_prediction_job_schedule,
+    )
 
-retraining_policy = datarobot.DeploymentRetrainingPolicy(
-    deployment_id=forecast_deployment.id,
-    **settings_forecast_deployment.retraining_policy_settings.model_dump(),
-)
+    retraining_policy = datarobot.DeploymentRetrainingPolicy(
+        deployment_id=forecast_deployment.id,
+        **settings_forecast_deployment.retraining_policy_settings.model_dump(),
+    )
+else:
+    pulumi.info(
+        "Skipping batch prediction job and retraining policy creation for existing deployment"
+    )
 
 app_runtime_parameters = [
     datarobot.ApplicationSourceRuntimeParameterValueArgs(
@@ -181,7 +198,10 @@ credentials_runtime_parameters_values = get_credential_runtime_parameter_values(
     credentials
 )
 
-if credentials is not None or settings_generative.LLM is not None:
+if credentials is not None or (
+    settings_generative.LLM == LLMs.DEPLOYED_LLM
+    and (TEXTGEN_REGISTERED_MODEL_ID is not None or TEXTGEN_DEPLOYMENT_ID is not None)
+):
     playground = datarobot.Playground(
         use_case_id=use_case.id,
         **settings_generative.playground_args.model_dump(),

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+- Fixed credential handling when no credentials available
+- Fixed chart not displaying correctly if data is not ordered by date 
+
+## [0.1.18] - 2025-07-01
+
+### Added
+- Support for reusing existing forecast deployments via `FORECAST_DEPLOYMENT_ID` environment variable
+- Ability to skip model training when using existing deployments for faster app setup
+- Automatic extraction of model metadata from existing DataRobot deployments
+
 ## [0.1.17] - 2025-04-07
 
 ### Added

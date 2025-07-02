@@ -499,6 +499,7 @@ def _aggregate_scoring_data(scoring_data: list[dict[str, Any]]) -> pd.DataFrame:
         .assign(
             timestamp=lambda x: pd.to_datetime(x[datetime_column], format=date_format)
         )
+        .sort_values("timestamp")
     )
 
 
