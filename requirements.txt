@@ -26,7 +26,7 @@ papermill>=2.6.0,<3
 pytest==8.0.1
 mypy==1.11.2
 types-PyYAML==6.0.12.20240917
-ruff==0.6.9
+ruff==0.12.1
 
 fastapi[standard]>=0.115.5,<1
 boto3
