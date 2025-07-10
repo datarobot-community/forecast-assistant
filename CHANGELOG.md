@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed credential handling when no credentials available
 - Fixed chart not displaying correctly if data is not ordered by date 
 
+## [0.1.19] - 2025-07-08
+
+### Changed
+- Better document reuse of existing forecast deployments via `FORECAST_DEPLOYMENT_ID` environment variable.
+
+### Added
+- Ability to automatically populate `resources` field of created Custom Applications from their Custom Application Sources.
+
+
 ## [0.1.18] - 2025-07-01
 
 ### Added

@@ -17,6 +17,7 @@ import os
 import sys
 import textwrap
 from pathlib import Path
+from typing import Any
 
 import pulumi
 import pulumi_datarobot as datarobot
@@ -59,6 +60,7 @@ from utils.credentials import (
     get_credential_runtime_parameter_values,
     get_credentials,
 )
+from utils.datarobot_api_helpers import get_application_source_resources
 from utils.papermill import run_notebook
 
 TEXTGEN_DEPLOYMENT_ID = os.environ.get("TEXTGEN_DEPLOYMENT_ID")
@@ -282,11 +284,35 @@ application_source = datarobot.ApplicationSource(
     **settings_app_infra.app_source_args,
 )
 
+
+# Function to fetch and apply application source resources
+def apply_source_resources(source_id: str) -> dict[str, Any]:
+    """Fetch application source resources and return them for Custom Application"""
+    try:
+        resources = get_application_source_resources(source_id)
+        if resources:
+            pulumi.info(f"Retrieved resources from application source: {resources}")
+            return resources
+        else:
+            pulumi.warn(
+                "No resources found in application source, using DataRobot defaults"
+            )
+            return {}
+    except Exception as e:
+        pulumi.warn(f"Failed to fetch application source resources: {e}")
+        pulumi.warn("Falling back to DataRobot automatic resource allocation")
+        return {}
+
+
+# Get resources from application source and apply to custom application
+source_resources = application_source.id.apply(apply_source_resources)
+
 app = datarobot.CustomApplication(
     resource_name=settings_app_infra.app_resource_name,
     source_version_id=application_source.version_id,
     use_case_ids=[model_training_output.use_case_id],
     allow_auto_stopping=True,
+    resources=source_resources,
 )
 
 

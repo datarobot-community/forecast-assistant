@@ -100,6 +100,13 @@ Each template provides an end-to-end AI architecture, from raw inputs to deploye
    - `notebooks/prep_scoring_data.ipynb`: Handles scoring data preparation (the data used to show forecasts in the front-end).
    
    The last cell of each notebook is required, as it writes outputs needed for the rest of the pipeline.
+
+**Recent improvements in `train_model.ipynb`:**
+- **Dual-mode operation**: The notebook now supports both training new models and using existing deployments
+- **Automatic metadata extraction**: When using an existing deployment, the notebook automatically extracts model metadata (target, datetime partition column, etc.)
+- **Flexible feature configuration**: Easy configuration of known-in-advance features for what-if analysis
+- **Error handling**: Improved error handling with fallback mechanisms for missing model metadata
+
 2. Run the revised notebooks.
 3. Run `pulumi up` to update your stack with these changes.
 ```bash
@@ -126,6 +133,31 @@ To use an existing forecast deployment instead of creating a new one:
 > - The script will skip creating batch prediction jobs and retraining policies  
 > - The `train_model.ipynb` notebook will skip training and extract metadata from the existing model
 > - You may need to adjust the `feature_settings_config` in the notebook to match your model's known-in-advance features
+
+**Files that need modification for existing deployments:**
+
+When using an existing deployment, you may need to modify these files to match your model's configuration:
+
+1. **`notebooks/train_model.ipynb`** - Update the `feature_settings_config` to match your model's known-in-advance features:
+   ```python
+   feature_settings_config=[
+       FeatureSettingConfig(feature_name="Your_Feature_Name", known_in_advance=True),
+       # Add other known-in-advance features from your model
+   ]
+   ```
+
+2. **`notebooks/prep_scoring_data.ipynb`** - Ensure your scoring data preparation matches the data format expected by your existing model
+
+3. **`forecastic/schema.py`** - Update app settings if your model has different features or requirements
+
+**What happens when using an existing deployment:**
+
+- **Model Training**: Completely skipped - no new model is trained
+- **Data Ingestion**: Skipped - uses existing model's training data
+- **Metadata Extraction**: The notebook extracts target, datetime partition column, and other model metadata from your existing deployment
+- **Resource Creation**: Only creates the application frontend and LLM components (if enabled)
+- **Batch Prediction**: Not created (you'll need to set up your own if needed)
+- **Retraining Policy**: Not created (you'll need to set up your own if needed)
 
 ### Change the LLM
 
@@ -163,6 +195,45 @@ pulumi up
 
 #### Change the language in the front-end
 Optionally, you can set the application locale in `forecastic/i18n.py`, e.g. `APP_LOCALE = LanguageCode.JA`. Supported locales are Japanese and English, with English set as the default.
+
+#### Application resources
+The application now supports inheriting resource configurations from the Application Source. When the Application Source is created, the system automatically fetches its resource settings (replicas, memory, CPU) via the DataRobot API and applies them to the Custom Application.
+
+**How it works:**
+1. The Application Source is created with its resource configuration
+2. The system fetches the source's resource details using `application_source.id`
+3. These resources are automatically applied to the Custom Application
+
+**Environment variables required:**
+- `DATAROBOT_ENDPOINT`: Your DataRobot API endpoint
+- `DATAROBOT_API_TOKEN`: Your DataRobot API token
+
+**Fallback behavior:**
+- If resources cannot be fetched from the Application Source, the system falls back to DataRobot's automatic resource allocation
+- Error messages are logged as warnings, ensuring deployment continues successfully
+
+### Environment Variables
+
+The following environment variables can be configured in your `.env` file:
+
+**Required for all deployments:**
+- `DATAROBOT_ENDPOINT`: Your DataRobot API endpoint (e.g., `https://app.datarobot.com`)
+- `DATAROBOT_API_TOKEN`: Your DataRobot API token
+
+**Optional for existing deployments:**
+- `FORECAST_DEPLOYMENT_ID`: ID of an existing forecast deployment to reuse instead of creating a new one
+- `TEXTGEN_REGISTERED_MODEL_ID`: ID of an existing registered model for LLM functionality
+- `TEXTGEN_DEPLOYMENT_ID`: ID of an existing LLM deployment for LLM functionality
+- `CHAT_MODEL_NAME`: Model name for LLM deployments (e.g., "claude-3-7-sonnet-20250219", "datarobot-deployed-llm")
+
+**Optional for LLM providers:**
+- `OPENAI_API_KEY`: OpenAI API key (for OpenAI LLMs)
+- `OPENAI_API_DEPLOYMENT_ID`: Azure OpenAI deployment ID (for Azure OpenAI)
+- `ANTHROPIC_API_KEY`: Anthropic API key (for Claude models)
+- `GOOGLE_API_KEY`: Google API key (for Google LLMs)
+
+**Optional for advanced configuration:**
+- `DATAROBOT_DEFAULT_USE_CASE`: Use case ID to associate with the project
 
 ## Share results
 1. Log into the DataRobot application.
