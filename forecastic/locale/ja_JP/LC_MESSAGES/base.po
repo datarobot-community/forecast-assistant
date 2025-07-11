@@ -1,0 +1,91 @@
+msgid ""
+msgstr ""
+"PO-Revision-Date: 2024-12-03 21:58+0000\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Repo: recipe-forecastic-reactic\n"
+"X-Segment-Count: 24\n"
+"X-Word-Count: 260\n"
+
+msgid ""
+"        You are a data analyst and your job is to explain to non-technical executive business leaders what the data suggests\n"
+"        Executive leadership will provide a sales forecast and you will interpret it and summarize the outlook, highlighting key insights.\n"
+"        Your response should be only 1 sentence long, not very wordy. It should be like a news headline. Do not put quotation marks around it.\n"
+"        Your response, while insightful, should speak to the general direction of the forecast."
+msgstr ""
+"        あなたはデータアナリストであり、あなたの仕事は、データが何を示唆しているかを、技術者ではない経営幹部に説明することです。\n"
+"        経営幹部が売上予測を提示するので、それを解釈して見通しをまとめ、重要なポイントを明確にします。\n"
+"        回答は1文で、あまり冗長にならないようにします。ニュースの見出しのような感じです。引用符は付けないでください。\n"
+"        あなたの回答は、見識に富んでいても、予測の全体的な方向性を示すものでなければなりません。"
+
+msgid "**AI Generated Analysis:**"
+msgstr "**AIが生成した分析：**"
+
+msgid "Choose an option"
+msgstr "オプションを選択"
+
+msgid "Forecast:"
+msgstr "予測："
+
+msgid "Generating explanation..."
+msgstr "説明を生成しています..."
+
+msgid "High forecast"
+msgstr "上限予測"
+
+msgid "Important Features"
+msgstr "有用な特徴量"
+
+msgid "Low forecast"
+msgstr "下限予測"
+
+msgid "Market"
+msgstr "市場"
+
+msgid "Multistore Sales Forecast Interpreter"
+msgstr "複数店舗の売上予測を解釈"
+
+msgid "No data available for the selected series. Try a different combination of filters."
+msgstr "選択された系列に利用できるデータがありません。フィルターの組み合わせを変えてみてください。"
+
+msgid "Number of records to display"
+msgstr "表示するレコード数"
+
+msgid "Processing forecast..."
+msgstr "予測を処理しています..."
+
+msgid "Region"
+msgstr "リージョン"
+
+msgid "Run Forecast"
+msgstr "予測を実行"
+
+msgid "Sales ($)"
+msgstr "売上高（$）"
+
+msgid "Select Filters for the Forecast"
+msgstr "予測のフィルターを選択"
+
+msgid "Store"
+msgstr "データストア"
+
+msgid "The following are the most important exogenous features in the forecasting model's predictions of `{target}`. Provide a 3-4 sentence summary of the exogenous driver(s) for the forecast, explain any potential intuitive, qualitative interpretation(s) or explanation(s)."
+msgstr "以下は、予測モデルによる`{target}`の予測において最も有用な外因的特徴量です。予測の外因的要因を3~4文で要約し、直感的で定性的な解釈や説明があれば提示してください。"
+
+msgid "The following are the most important features in the forecasting model's predictions. Provide a 3-4 sentence summary of the key cyclical and/or trend drivers for the forecast, explain any potential intuitive,qualitative interpretations or explanations."
+msgstr "以下は、予測モデルによる予測において最も有用な特徴量です。予測の主要な周期要因やトレンド要因を3~4文で要約し、直感的で定性的な解釈や説明があれば提示してください。"
+
+msgid "This application forecasts the sale revenue of a national retailer. The forecast can be focused by region, market, or store."
+msgstr "このアプリケーションは、全国規模の小売業者の売上収益を予測します。予測は、地域、市場、または店舗別に絞り込むことができます。"
+
+msgid "Total {target} Forecast"
+msgstr "{target}の予測合計"
+
+msgid "Unable to load Deployment IDs or Application Settings. If running locally, verify you have selected the correct stack and that it is active using `pulumi stack output`. If running in DataRobot, verify your runtime parameters have been set correctly."
+msgstr "デプロイIDまたはアプリケーション設定を読み込めません。ローカルで実行している場合は、`pulumi stack output`を使用して、正しいスタックが選択されていることと、そのスタックがアクティブであることを確認します。DataRobotで実行している場合は、ランタイムパラメーターが正しく設定されていることを確認します。"
+
+msgid "{target} History"
+msgstr "{target}の履歴"
