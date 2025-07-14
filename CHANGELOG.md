@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed credential handling when no credentials available
 - Fixed chart not displaying correctly if data is not ordered by date 
 
+## [0.2.0] - 2025-07-14
+
+### Changed
+- Increased the maximum wait time for Autopilot model training in the training notebook to 1200 seconds, reducing the likelihood of timeouts during long-running model builds.
+
+
 ## [0.1.19] - 2025-07-08
 
 ### Changed
