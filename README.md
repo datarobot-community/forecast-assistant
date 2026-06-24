@@ -1,5 +1,24 @@
 # Forecast assistant
 
+<p align="center">
+  <a href="https://app.datarobot.com/usecases/application-templates/66df7eab3168a83282cf4ad8?referrerUrl=github">
+    <img src="https://img.shields.io/badge/US-Open%20in%20a%20Codespace-%23909BF5?style=flat&labelColor=%2330373D" alt="US - Open in a Codespace">
+  </a>
+  <a href="https://app.eu.datarobot.com/usecases/application-templates/66df7eab3168a83282cf4ad8?referrerUrl=github">
+    <img src="https://img.shields.io/badge/EU-Open%20in%20a%20Codespace-%232BC46F?labelColor=%2330373D" alt="EU - Open in a Codespace">
+  </a>
+  <a href="https://app.jp.datarobot.com/usecases/application-templates/66df7eab3168a83282cf4ad8?referrerUrl=github">
+    <img src="https://img.shields.io/badge/JP-Open%20in%20a%20Codespace-%23EDA769?labelColor=%2330373D" alt="JP - Open in a Codespace">
+  </a>
+  <a href="https://app.jp.datarobot.com/usecases/application-templates/66df7eab3168a83282cf4ad8?referrerUrl=github">
+    <img src="https://img.shields.io/badge/JP-%E3%80%8CCodespace%20%E3%81%A7%E9%96%8B%E3%81%8F%E3%80%8D-%23EDA769?labelColor=%2330373D" alt="JP - 「Codespaceで開く」">
+  </a>
+  <a href="https://join.slack.com/t/datarobot-community/shared_invite/zt-3uzfp8k50-SUdMqeux25ok9_5wr4okrg">
+    <img src="https://img.shields.io/badge/%23applications-a?label=Slack&labelColor=30373D&color=81FBA6" alt="Slack #applications">
+  </a>
+</p>
+
+
 The forecast assistant is a customizable application template for building AI-powered forecasts. In addition to creating a hosted and shareable user interface, the forecast assistant provides: 
 
 * Best-in-class predictive model training and deployment using DataRobot forecasting.
@@ -19,6 +38,7 @@ The forecast assistant is a customizable application template for building AI-po
    - [Change the data and how the model is trained](#change-the-data-and-how-the-model-is-trained)
    - [Disable the LLM](#disable-the-llm)
    - [Change the LLM](#change-the-llm)
+   - [Add a new LLM](#add-a-new-llm)
    - [Change the front-end](#change-the-front-end)
    - [Change the language in the front-end](#change-the-language-in-the-front-end)
 5. [Share results](#share-results)
@@ -233,6 +253,47 @@ When using an existing deployment, you may need to modify these files to match y
 
 > **⚠️ Availability information:**  
 > Using a NIM model requires custom model GPU inference, a premium feature. You will experience errors by using this type of model without the feature enabled. Contact your DataRobot representative or administrator for information on enabling this feature.
+
+### Add a new LLM
+
+If the LLM you want to use isn't already defined in the `LLMs` object, you can register it manually using `LLMConfig`.
+
+1. Find the ID of the LLM you want to add by running the following in a Python session:
+
+   ```python
+   import datarobot
+   print('\n'.join([i['id'] for i in datarobot.genai.LLMDefinition.list()]))
+   ```
+
+2. In `infra/settings_generative.py`, add `LLMConfig` to the existing import and register the new LLM before the `LLM =` assignment:
+
+   ```python
+   from datarobot_pulumi_utils.schema.llms import (
+       LLMBlueprintArgs,
+       LLMConfig,
+       LLMs,
+       LLMSettings,
+       PlaygroundArgs,
+   )
+
+   LLMs.YOUR_LLM_NAME = LLMConfig(name="YOUR_LLM_ID", credential_type="azure")
+   LLM = LLMs.YOUR_LLM_NAME
+   ```
+
+   Replace `YOUR_LLM_NAME` with a descriptive attribute name and `YOUR_LLM_ID` with the ID from step 1.
+
+3. In `utils/credentials.py`, add a mapping from the new LLM name to its Azure deployment name inside the `get_credentials` function:
+
+   ```python
+   LLMs.YOUR_LLM_NAME.name: "YOUR_AZURE_DEPLOYMENT_NAME",
+   ```
+
+4. Run `pulumi up` to update your stack.
+
+   ```bash
+   source set_env.sh  # On windows use `set_env.bat`
+   pulumi up
+   ```
 
 ### Change the front-end
 1. Ensure you have already run `pulumi up` at least once (to provision the time series deployment).

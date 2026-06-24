@@ -23,7 +23,12 @@ from datarobot_pulumi_utils.schema.custom_models import (
 from datarobot_pulumi_utils.schema.exec_envs import (
     RuntimeEnvironments,
 )
-from datarobot_pulumi_utils.schema.llms import LLMBlueprintArgs, LLMs, PlaygroundArgs
+from datarobot_pulumi_utils.schema.llms import (
+    LLMBlueprintArgs,
+    LLMConfig,
+    LLMs,
+    PlaygroundArgs,
+)
 
 from forecastic.schema import GenerativeDeploymentSettings, association_id
 
@@ -32,7 +37,10 @@ from .settings_main import (
     project_name,
 )
 
-LLM = LLMs.AZURE_OPENAI_GPT_4_O_MINI
+LLMs.AZURE_OPENAI_GPT_5_MINI = LLMConfig(  # type: ignore[attr-defined]
+    name="azure-openai-gpt-5-mini", credential_type="azure"
+)
+LLM = LLMs.AZURE_OPENAI_GPT_5_MINI  # type: ignore[attr-defined]
 
 if LLM is not None:
     playground_args = PlaygroundArgs(

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.3.2] - 2026-06-23
+
+### Changed
+
+- Updated the default LLM to Azure OpenAI GPT-5-mini, with README instructions for changing the LLM.
+
+### Fixed
+
+- Fixed generative LLM custom model runtime parameters being overwritten with only the credential values when provider LLM credentials are configured. Credentials are now merged onto the blueprint's default runtime parameters instead of replacing them.
+
 ## [0.3.1] - 2026-01-27
 
 ### Fixed
