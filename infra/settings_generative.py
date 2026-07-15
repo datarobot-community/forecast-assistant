@@ -25,7 +25,6 @@ from datarobot_pulumi_utils.schema.exec_envs import (
 )
 from datarobot_pulumi_utils.schema.llms import (
     LLMBlueprintArgs,
-    LLMConfig,
     LLMs,
     PlaygroundArgs,
 )
@@ -37,10 +36,7 @@ from .settings_main import (
     project_name,
 )
 
-LLMs.AZURE_OPENAI_GPT_5_MINI = LLMConfig(  # type: ignore[attr-defined]
-    name="azure-openai-gpt-5-mini", credential_type="azure"
-)
-LLM = LLMs.AZURE_OPENAI_GPT_5_MINI  # type: ignore[attr-defined]
+LLM = LLMs.AZURE_OPENAI_GPT_5_MINI
 
 if LLM is not None:
     playground_args = PlaygroundArgs(

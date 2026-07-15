@@ -6,7 +6,7 @@ dr:
   url: https://github.com/datarobot-oss/cli
 python:
   name: Python
-  minimum-version: 3.9.0
+  minimum-version: 3.12.0
   command: python --version
   url: https://www.python.org/
 git:

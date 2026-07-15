@@ -17,9 +17,7 @@ import os
 import sys
 import textwrap
 from pathlib import Path
-from typing import Any
 
-import datarobot as dr
 import pulumi
 import pulumi_datarobot as datarobot
 import yaml
@@ -28,9 +26,6 @@ from datarobot_pulumi_utils.common.urls import get_deployment_url
 from datarobot_pulumi_utils.pulumi.custom_model_deployment import CustomModelDeployment
 from datarobot_pulumi_utils.pulumi.proxy_llm_blueprint import ProxyLLMBlueprint
 from datarobot_pulumi_utils.schema.llms import LLMs
-from datarobotx.idp.custom_model_versions import (
-    _unsafe_get_or_create_custom_model_version_from_previous as get_or_create_custom_model_version_from_previous,
-)
 
 sys.path.append("..")
 
@@ -61,6 +56,7 @@ from infra.settings_main import (
 )
 from infra.settings_proxy_llm import CHAT_MODEL_NAME
 from utils.credentials import (
+    get_blueprint_runtime_parameters,
     get_credential_runtime_parameter_values,
     get_credentials,
 )
@@ -204,48 +200,6 @@ credentials_runtime_parameters_values = get_credential_runtime_parameter_values(
 )
 
 
-def merge_runtime_parameter_values_and_create_version(
-    custom_model_id: str,
-    base_version_id: str,
-    credential_overrides: list[dict[str, Any]],
-) -> str:
-    """Create a custom model version that combines the blueprint-generated default runtime
-    parameters with the supplied credential runtime parameter values.
-
-    DataRobot's "create version from previous" keeps only the runtime parameters that are
-    explicitly supplied, so we read the full set off the blueprint-generated version and
-    re-supply all of them, overriding just the credential parameters.
-    """
-    client = dr.client.get_client()
-    base_version = dr.CustomModelVersion.get(custom_model_id, base_version_id)
-
-    overrides_by_name = {ov["field_name"]: ov for ov in credential_overrides}
-    merged_runtime_parameter_values: list[dict[str, Any]] = []
-    for runtime_parameter in base_version.runtime_parameters or []:
-        if runtime_parameter.field_name in overrides_by_name:
-            merged_runtime_parameter_values.append(
-                overrides_by_name[runtime_parameter.field_name]
-            )
-        elif runtime_parameter.current_value is not None:
-            merged_runtime_parameter_values.append(
-                {
-                    "field_name": runtime_parameter.field_name,
-                    "type": runtime_parameter.type,
-                    "value": runtime_parameter.current_value,
-                }
-            )
-
-    return str(
-        get_or_create_custom_model_version_from_previous(
-            endpoint=client.endpoint,
-            token=client.token,
-            custom_model_id=custom_model_id,
-            base_environment_id=base_version.base_environment_id,
-            runtime_parameter_values=merged_runtime_parameter_values,
-        )
-    )
-
-
 if credentials is not None or (
     settings_generative.LLM == LLMs.DEPLOYED_LLM
     and (TEXTGEN_REGISTERED_MODEL_ID is not None or TEXTGEN_DEPLOYMENT_ID is not None)
@@ -295,47 +249,39 @@ if credentials is not None or (
             **settings_generative.llm_blueprint_args.model_dump(),
         )
 
-    # Create from the blueprint WITHOUT runtime_parameter_values: passing them makes the provider
-    # create a second, blueprint-detached version that keeps only the passed params and drops every
-    # blueprint default (PROMPT_COLUMN_NAME, LLM_ID, PLAYGROUND_ID, DRUM_*, ...). Credentials are
-    # merged onto the full default set below instead.
+    generative_runtime_parameter_values: (
+        list[datarobot.CustomModelRuntimeParameterValueArgs] | None
+    ) = None
+    if (
+        settings_generative.LLM != LLMs.DEPLOYED_LLM
+        and credentials_runtime_parameters_values
+    ):
+        # Supply the FULL runtime parameter set explicitly. Passing a partial set (e.g. only the
+        # credentials) makes the provider drop every blueprint default that isn't restated,
+        # including DRUM system parameters such as DEVICE_FOR_NEURAL_NETWORK_COMPUTATIONS that the
+        # model requires to load. Restating the full blueprint/DRUM default set alongside the
+        # credentials keeps the model healthy and also repairs models a previous partial submission
+        # had already wiped. Deployed LLMs handle credentials via the proxy deployment, so they keep
+        # the blueprint-generated defaults by omitting runtime_parameter_values entirely.
+        generative_runtime_parameter_values = [
+            *get_blueprint_runtime_parameters(
+                llm_blueprint_id=llm_blueprint.id,
+                playground_id=playground.id,
+                llm_id=settings_generative.llm_blueprint_args.llm_id,
+            ),
+            *credentials_runtime_parameters_values,
+        ]
+
     generative_custom_model = datarobot.CustomModel(
         **settings_generative.custom_model_args.model_dump(exclude_none=True),
         use_case_ids=[use_case.id],
         source_llm_blueprint_id=llm_blueprint.id,
+        runtime_parameter_values=generative_runtime_parameter_values,
     )
-
-    if (
-        settings_generative.LLM == LLMs.DEPLOYED_LLM
-        or not credentials_runtime_parameters_values
-    ):
-        # Deployed LLMs handle credentials via the proxy deployment; nothing to merge.
-        generative_custom_model_version_id = generative_custom_model.version_id
-    else:
-        # Resolve the credential id Outputs into the field_name/type/value dicts the merge expects.
-        credential_overrides = pulumi.Output.all(
-            *[param.value for param in credentials_runtime_parameters_values]
-        ).apply(
-            lambda values: [
-                {"field_name": param.key, "type": param.type, "value": value}
-                for param, value in zip(credentials_runtime_parameters_values, values)
-            ]
-        )
-        generative_custom_model_version_id = pulumi.Output.all(
-            custom_model_id=generative_custom_model.id,
-            base_version_id=generative_custom_model.version_id,
-            credential_overrides=credential_overrides,
-        ).apply(
-            lambda resolved: merge_runtime_parameter_values_and_create_version(
-                custom_model_id=resolved["custom_model_id"],
-                base_version_id=resolved["base_version_id"],
-                credential_overrides=resolved["credential_overrides"],
-            )
-        )
 
     generative_deployment = CustomModelDeployment(
         resource_name=f"Forecasting Assistant LLM Deployment [{settings_main.project_name}]",
-        custom_model_version_id=generative_custom_model_version_id,
+        custom_model_version_id=generative_custom_model.version_id,
         registered_model_args=settings_generative.registered_model_args,
         prediction_environment=prediction_environment,
         deployment_args=settings_generative.deployment_args,
