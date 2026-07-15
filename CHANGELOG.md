@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.3.4] - 2026-07-15
+
+### Fixed
+
+- Restored the `datarobotx-idp` dependency dropped in `0.3.3`. It's still required by the model training and scoring-prep notebooks (`datarobotx.idp.use_cases`, `.datasets`, `.autopilot`, `.calendars`, `.registered_model_versions`); only its usage in `infra/__main__.py` was removable.
+
 ## [0.3.3] - 2026-07-15
 
 ### Fixed
