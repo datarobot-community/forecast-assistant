@@ -44,7 +44,8 @@ The forecast assistant is a customizable application template for building AI-po
 5. [Share results](#share-results)
 6. [Delete all resources](#delete-all-provisioned-resources)
 7. [Setup for advanced users](#setup-for-advanced-users)
-8. [Data privacy](#data-privacy)
+8. [Testing](#testing)
+9. [Data privacy](#data-privacy)
 
 ## 🚀 Quick Start
 
@@ -217,7 +218,7 @@ When using an existing deployment, you may need to modify these files to match y
 
 1. **`notebooks/train_model.ipynb`** - Update the `feature_settings_config` to match your model's known-in-advance features:
    ```python
-   feature_settings_config=[
+   feature_settings_config = [
        FeatureSettingConfig(feature_name="Your_Feature_Name", known_in_advance=True),
        # Add other known-in-advance features from your model
    ]
@@ -262,7 +263,8 @@ If the LLM you want to use isn't already defined in the `LLMs` object, you can r
 
    ```python
    import datarobot
-   print('\n'.join([i['id'] for i in datarobot.genai.LLMDefinition.list()]))
+
+   print("\n".join([i["id"] for i in datarobot.genai.LLMDefinition.list()]))
    ```
 
 2. In `infra/settings_generative.py`, add `LLMConfig` to the existing import and register the new LLM before the `LLM =` assignment:
@@ -384,6 +386,37 @@ pulumi stack init YOUR_PROJECT_NAME
 pulumi up 
 ```
 For projects that will be maintained, DataRobot recommends forking the repo so upstream fixes and improvements can be merged in the future.
+
+## Testing
+
+### Pytest suite
+
+The tests in `tests/` (excluding `tests/e2e/`) exercise the deployed
+application, its DataRobot API helper functions, and — via Streamlit's
+`AppTest` — the frontend directly.
+
+```bash
+pip install -r requirements.txt
+pytest tests --ignore=tests/e2e
+```
+
+Pass `--pulumi_up` to deploy a fresh, disposable stack for the run instead of
+using the currently-selected one:
+
+```bash
+pytest tests --ignore=tests/e2e --pulumi_up                       # tear down on success, keep the stack if a test fails (for debugging)
+pytest tests --ignore=tests/e2e --pulumi_up --always_delete_stack # always tear down, even after a failure
+```
+
+`test_datarobot_api_calls.py` is a pure unit-test suite (mocked HTTP calls) —
+it needs neither a deployed stack nor `--pulumi_up`.
+
+### End-to-end tests
+
+`tests/e2e/` holds the Cypress suite the Harness `e2e_v2` pipeline runs
+against a deployed Custom Application. See
+[tests/e2e/README.md](tests/e2e/README.md) for setup, configuration, and how
+to run it.
 
 ## Data privacy
 Your data privacy is important to DataRobot. Data handling is governed by the DataRobot [Privacy Policy](https://www.datarobot.com/privacy/). Review the policy before using your own data with DataRobot.

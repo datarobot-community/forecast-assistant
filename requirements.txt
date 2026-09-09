@@ -1,5 +1,5 @@
 pulumi==3.153.0
-pulumi-datarobot>=0.10.22
+pulumi-datarobot>=0.10.22,<0.11
 datarobot-pulumi-utils>=0.1.6,<0.2
 
 datarobot>=3.9.1,<4.0.0

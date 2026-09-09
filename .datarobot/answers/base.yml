@@ -1,0 +1,19 @@
+---
+# Changes here will be overwritten by Copier
+_commit: 47b576e
+_src_path: https://github.com/datarobot/af-component-base
+copyright_year: 2024
+github_owner_group: '@datarobot/customer-engineering'
+harness_org_id: No_Code_Apps
+oss_repo_name: forecast-assistant
+private_repo_name: recipe-forecastic-reactic
+template_code_name: 'forecast-assistant'
+template_description: "The forecast assistant is a customizable application template\
+    \ for building AI-powered forecasts. In addition to creating a hosted and shareable\
+    \ user interface, the forecast assistant provides: \n\n* Best-in-class predictive\
+    \ model training and deployment using DataRobot forecasting.\n* An intelligent\
+    \ explanation of factors driving the forecast that are uniquely derived for any\
+    \ series at any time."
+template_name: 'Forecast assistant
+
+    '

@@ -56,7 +56,6 @@ from infra.settings_main import (
 )
 from infra.settings_proxy_llm import CHAT_MODEL_NAME
 from utils.credentials import (
-    get_blueprint_runtime_parameters,
     get_credential_runtime_parameter_values,
     get_credentials,
 )
@@ -249,34 +248,13 @@ if credentials is not None or (
             **settings_generative.llm_blueprint_args.model_dump(),
         )
 
-    generative_runtime_parameter_values: (
-        list[datarobot.CustomModelRuntimeParameterValueArgs] | None
-    ) = None
-    if (
-        settings_generative.LLM != LLMs.DEPLOYED_LLM
-        and credentials_runtime_parameters_values
-    ):
-        # Supply the FULL runtime parameter set explicitly. Passing a partial set (e.g. only the
-        # credentials) makes the provider drop every blueprint default that isn't restated,
-        # including DRUM system parameters such as DEVICE_FOR_NEURAL_NETWORK_COMPUTATIONS that the
-        # model requires to load. Restating the full blueprint/DRUM default set alongside the
-        # credentials keeps the model healthy and also repairs models a previous partial submission
-        # had already wiped. Deployed LLMs handle credentials via the proxy deployment, so they keep
-        # the blueprint-generated defaults by omitting runtime_parameter_values entirely.
-        generative_runtime_parameter_values = [
-            *get_blueprint_runtime_parameters(
-                llm_blueprint_id=llm_blueprint.id,
-                playground_id=playground.id,
-                llm_id=settings_generative.llm_blueprint_args.llm_id,
-            ),
-            *credentials_runtime_parameters_values,
-        ]
-
     generative_custom_model = datarobot.CustomModel(
         **settings_generative.custom_model_args.model_dump(exclude_none=True),
         use_case_ids=[use_case.id],
         source_llm_blueprint_id=llm_blueprint.id,
-        runtime_parameter_values=generative_runtime_parameter_values,
+        runtime_parameter_values=[]
+        if settings_generative.LLM == LLMs.DEPLOYED_LLM
+        else credentials_runtime_parameters_values,
     )
 
     generative_deployment = CustomModelDeployment(
