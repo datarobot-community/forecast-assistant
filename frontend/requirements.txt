@@ -10,7 +10,7 @@ pandas>=2.2.2,<3
 
 streamlit>=1.39.0,<2
 st-theme>=1.2.3,<2
-plotly>=5.24.1,<6
+plotly>=5.24.1,<7
 
 pydantic==2.9.2
 pydantic-settings==2.5.2
