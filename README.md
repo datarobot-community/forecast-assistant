@@ -1,3 +1,6 @@
+> [!WARNING]
+> **This template is no longer supported and will be archived.** Please do not use it for new projects.
+
 # Forecast assistant
 
 <p align="center">
